@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Add game — FootballSlop{% endblock %}
+
+{% block content %}
+  <h1>Add a game</h1>
+  <p>Enter the current spread as shown on DraftKings.</p>
+
+  <form method="post" class="admin-form">
+    <label>Season <input type="number" name="season" value="2026" required></label>
+    <label>Week <input type="number" name="week" value="1" required></label>
+    <label>Home team <input type="text" name="home_team" placeholder="Patriots" required></label>
+    <label>Away team <input type="text" name="away_team" placeholder="Seahawks" required></label>
+    <label>Favorite team (must match home or away exactly)
+      <input type="text" name="favorite_team" placeholder="Patriots" required>
+    </label>
+    <label>Spread points (positive number, e.g. 3.5)
+      <input type="number" step="0.5" name="spread_points" placeholder="3.5" required>
+    </label>
+    <label>Kickoff (date/time in Eastern Time / ET)
+      <input type="datetime-local" name="kickoff_at" required>
+    </label>
+    <button type="submit">Add game</button>
+  </form>
+{% endblock %}
