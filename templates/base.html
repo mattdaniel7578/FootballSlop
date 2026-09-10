@@ -27,7 +27,8 @@
     </nav>
 
     <details class="nav-toggle">
-      <summary aria-label="Menu">&#9776;</summary>
+      <summary aria-label="Menu"
+        onclick="event.preventDefault(); this.parentElement.open = !this.parentElement.open;">&#9776;</summary>
       <nav>
         {{ nav_links() }}
       </nav>

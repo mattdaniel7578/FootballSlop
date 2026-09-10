@@ -359,6 +359,7 @@ nav a.active {
 
 .record-col {
   width: 14%;
+  white-space: nowrap;
 }
 
 .player-col {
@@ -516,7 +517,7 @@ nav a.active {
   }
 
   .rank-col {
-    width: 18%;
+    width: 11%;
   }
 
   .position-col {
@@ -524,12 +525,21 @@ nav a.active {
   }
 
   .record-col {
-    width: 12%;
+    width: 20%;
+    white-space: nowrap;
     font-size: 0.85em;
   }
 
   .player-col {
-    width: 32%;
+    width: 30%;
     font-size: 0.85em;
+  }
+
+  .lines-table {
+    font-size: 0.75em;
+  }
+
+  .lines-table th, .lines-table td {
+    padding: 0.5rem 0.3rem;
   }
 }
