@@ -107,6 +107,13 @@ nav a.active {
   overflow: hidden;
 }
 
+.snap-info {
+  padding: 0 calc(var(--row-indicator-w) + var(--row-gap));
+  color: var(--muted);
+  font-size: 0.7rem;
+  margin-bottom: 0.4rem;
+}
+
 .location {
   text-overflow: ellipsis;
   overflow: hidden;
@@ -155,6 +162,27 @@ nav a.active {
 .team-box.selected {
   background: var(--accent);
   border-color: var(--accent);
+  color: white;
+  font-weight: 600;
+}
+
+.team-box.win {
+  background: #1a7f37;
+  border-color: #1a7f37;
+  color: white;
+  font-weight: 600;
+}
+
+.team-box.loss {
+  background: #c0392b;
+  border-color: #c0392b;
+  color: white;
+  font-weight: 600;
+}
+
+.team-box.push {
+  background: var(--muted);
+  border-color: var(--muted);
   color: white;
   font-weight: 600;
 }
@@ -315,7 +343,7 @@ nav a.active {
 
   .team-box {
     padding: 0.4rem 0.35rem;
-    font-size: 0.82rem;
+    font-size: 1.05rem;
   }
 
   .at-sep {
@@ -323,10 +351,18 @@ nav a.active {
   }
 
   .game-info {
-    font-size: 0.7rem;
+    font-size: 0.85rem;
+  }
+
+  .snap-info {
+    font-size: 0.8rem;
   }
 
   .team-picks {
-    font-size: 0.72rem;
+    font-size: 0.85rem;
+  }
+
+  .slate-note {
+    font-size: 0.9rem;
   }
 }

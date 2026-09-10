@@ -2,8 +2,6 @@
 {% block title %}Picks — FootballSlop{% endblock %}
 
 {% block content %}
-  <h1>Picks</h1>
-
   {% if weeks %}
     <form method="get" class="week-select">
       <select name="week" aria-label="Week" onchange="this.form.submit()">
@@ -41,20 +39,23 @@
               <span class="kickoff">{{ game.kickoff_at.strftime('%a %I:%M %p') }} ET</span>
               <span class="location">{{ game.location or "Location TBD" }}</span>
             </div>
+            {% if game.line_snapshot_at %}
+              <div class="snap-info">Line snapshotted {{ game.line_snapshot_at.strftime('%a %I:%M %p') }} ET</div>
+            {% endif %}
 
             {% if locked %}
               <details class="pick-breakdown">
                 <summary class="pick-row">
                   <span class="row-indicator" aria-hidden="true"></span>
                   <div class="team-col">
-                    <span class="team-box {{ 'selected' if current_pick == game.away_team }}">
+                    <span class="team-box {{ breakdown.my_pick_class if breakdown and current_pick == game.away_team }}">
                       {{ game.away_team }} {{ game.spread_display(game.away_team) }}
                       {% if breakdown and breakdown.total %} &middot; {{ breakdown.away_pct }}%{% endif %}
                     </span>
                   </div>
                   <span class="at-sep">@</span>
                   <div class="team-col">
-                    <span class="team-box {{ 'selected' if current_pick == game.home_team }}">
+                    <span class="team-box {{ breakdown.my_pick_class if breakdown and current_pick == game.home_team }}">
                       {{ game.home_team }} {{ game.spread_display(game.home_team) }}
                       {% if breakdown and breakdown.total %} &middot; {{ breakdown.home_pct }}%{% endif %}
                     </span>

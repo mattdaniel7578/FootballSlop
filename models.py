@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
 from flask_login import UserMixin
@@ -40,6 +40,24 @@ def classify_slate(kickoff_et):
     return "primetime"
 
 
+def compute_snap_at(kickoff_et):
+    """When a game's DraftKings line should freeze, ahead of kickoff:
+
+    - Thursday games: the preceding Wednesday at 4:00 PM ET.
+    - Sunday or Monday games: the preceding Saturday at 1:00 PM ET.
+    - Anything else (e.g. a Saturday game): 24 hours before kickoff.
+    """
+    weekday = kickoff_et.weekday()  # Mon=0 ... Sun=6
+    if weekday == 3:  # Thursday
+        wednesday = kickoff_et.date() - timedelta(days=1)
+        return datetime.combine(wednesday, time(16, 0))
+    if weekday in (6, 0):  # Sunday, Monday
+        days_back = 1 if weekday == 6 else 2
+        saturday = kickoff_et.date() - timedelta(days=days_back)
+        return datetime.combine(saturday, time(13, 0))
+    return kickoff_et - timedelta(hours=24)
+
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     google_sub = db.Column(db.String(64), unique=True, nullable=False)
@@ -76,6 +94,10 @@ class Game(db.Model):
 
     kickoff_at = db.Column(db.DateTime, nullable=False)
     locked = db.Column(db.Boolean, default=False, nullable=False)
+
+    # When the DraftKings line actually stopped updating (see
+    # compute_snap_at() and odds.sync_spreads) — None while it's still live.
+    line_snapshot_at = db.Column(db.DateTime)
 
     # "Venue, City, ST/Country" — pulled from ESPN's scoreboard (see
     # odds.sync_venues), since it correctly reflects neutral-site/

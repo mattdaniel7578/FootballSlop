@@ -14,7 +14,7 @@ from zoneinfo import ZoneInfo
 import requests
 
 from extensions import db
-from models import Game, classify_slate
+from models import Game, classify_slate, compute_snap_at, now_eastern
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +63,7 @@ def sync_spreads(app):
     resp.raise_for_status()
 
     season_start_date = app.config["SEASON_START_DATE"]
+    now = now_eastern()
 
     for event in resp.json():
         dk = next((b for b in event.get("bookmakers", []) if b["key"] == "draftkings"), None)
@@ -80,6 +81,7 @@ def sync_spreads(app):
         kickoff_et = _to_eastern_naive(event["commence_time"])
         season, week = _season_and_week(kickoff_et, season_start_date)
         slate = classify_slate(kickoff_et)
+        snap_at = compute_snap_at(kickoff_et)
 
         game = Game.query.filter_by(external_id=event["id"]).first()
         if game is None:
@@ -94,14 +96,19 @@ def sync_spreads(app):
                     favorite_team=favorite_team,
                     spread_points=spread_points,
                     kickoff_at=kickoff_et,
+                    line_snapshot_at=now if now >= snap_at else None,
                 )
             )
-        elif not game.is_locked():
-            # The line can move right up until kickoff; keep it current.
+        elif game.line_snapshot_at is None and not game.is_locked():
+            # The line stays live until its snap deadline (see
+            # compute_snap_at) — once we're past it, this same sync tick
+            # records the final line and every later tick leaves it alone.
             game.favorite_team = favorite_team
             game.spread_points = spread_points
             game.kickoff_at = kickoff_et
             game.slate = slate
+            if now >= snap_at:
+                game.line_snapshot_at = now
 
     db.session.commit()
 

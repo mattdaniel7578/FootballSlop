@@ -90,12 +90,26 @@ def index():
             total = len(entries)
             home_names = [name for name, team in entries if team == game.home_team]
             away_names = [name for name, team in entries if team == game.away_team]
+
+            my_pick = my_picks.get(game.id)
+            if not my_pick:
+                my_pick_class = ""
+            elif game.winner is None:
+                my_pick_class = "selected"
+            elif game.winner == "PUSH":
+                my_pick_class = "push"
+            elif my_pick == game.winner:
+                my_pick_class = "win"
+            else:
+                my_pick_class = "loss"
+
             pick_breakdowns[game.id] = {
                 "total": total,
                 "home_names": home_names,
                 "away_names": away_names,
                 "home_pct": round(len(home_names) / total * 100) if total else 0,
                 "away_pct": round(len(away_names) / total * 100) if total else 0,
+                "my_pick_class": my_pick_class,
             }
 
     return render_template(
@@ -162,12 +176,13 @@ def leaderboard():
         decided_picks = (
             Pick.query.filter_by(user_id=user.id)
             .join(Game)
-            .filter(Game.winner.isnot(None), Game.winner != "PUSH")
+            .filter(Game.winner.isnot(None))
             .all()
         )
-        wins = sum(1 for p in decided_picks if p.picked_team == p.game.winner)
-        losses = len(decided_picks) - wins
-        records.append({"user": user, "wins": wins, "losses": losses})
+        ties = sum(1 for p in decided_picks if p.game.winner == "PUSH")
+        wins = sum(1 for p in decided_picks if p.game.winner != "PUSH" and p.picked_team == p.game.winner)
+        losses = len(decided_picks) - wins - ties
+        records.append({"user": user, "wins": wins, "losses": losses, "ties": ties})
 
     records.sort(key=lambda r: (-r["wins"], r["losses"], r["user"].name.lower()))
     return render_template("leaderboard.html", records=records)
@@ -183,6 +198,10 @@ def user_picks(user_id):
         .order_by(Game.season.desc(), Game.week.desc(), Game.kickoff_at)
         .all()
     )
+    if user_id != current_user.id:
+        # Never reveal someone else's pick before their game has locked —
+        # only what the main Picks page would already show you.
+        picks = [p for p in picks if p.game.is_locked()]
     return render_template("user_picks.html", picked_user=picked_user, picks=picks)
 
 

@@ -15,7 +15,7 @@
         {% for r in records %}
           <tr>
             <td>{{ r.user.name }}</td>
-            <td>{{ r.wins }}-{{ r.losses }}</td>
+            <td>{{ r.wins }}-{{ r.losses }}-{{ r.ties }}</td>
             <td><a href="{{ url_for('main.user_picks', user_id=r.user.id) }}">View picks</a></td>
           </tr>
         {% endfor %}
