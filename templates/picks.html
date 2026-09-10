@@ -39,9 +39,6 @@
               <span class="kickoff">{{ game.kickoff_at.strftime('%a %I:%M %p') }} ET</span>
               <span class="location">{{ game.location or "Location TBD" }}</span>
             </div>
-            {% if game.line_snapshot_at %}
-              <div class="snap-info">Line snapshotted {{ game.line_snapshot_at.strftime('%a %I:%M %p') }} ET</div>
-            {% endif %}
 
             {% if locked %}
               <details class="pick-breakdown">

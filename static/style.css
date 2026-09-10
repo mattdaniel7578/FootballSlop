@@ -107,13 +107,6 @@ nav a.active {
   overflow: hidden;
 }
 
-.snap-info {
-  padding: 0 calc(var(--row-indicator-w) + var(--row-gap));
-  color: var(--muted);
-  font-size: 0.7rem;
-  margin-bottom: 0.4rem;
-}
-
 .location {
   text-overflow: ellipsis;
   overflow: hidden;
@@ -352,10 +345,6 @@ nav a.active {
 
   .game-info {
     font-size: 0.85rem;
-  }
-
-  .snap-info {
-    font-size: 0.8rem;
   }
 
   .team-picks {

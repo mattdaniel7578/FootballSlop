@@ -1,7 +1,7 @@
 from collections import defaultdict
 from itertools import groupby
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from extensions import db
@@ -208,4 +208,4 @@ def user_picks(user_id):
 @bp.route("/rules")
 @login_required
 def rules():
-    return render_template("rules.html")
+    return render_template("rules.html", odds_sync_minutes=current_app.config["ODDS_SYNC_MINUTES"])
