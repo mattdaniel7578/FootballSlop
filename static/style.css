@@ -481,9 +481,13 @@ nav a.active {
   }
 
   /* Nav hidden until the hamburger is tapped, then drops down as its own
-     panel — it doesn't push page content or change the top bar's height. */
+     panel — it doesn't push page content or change the top bar's height.
+     Uses visibility/opacity/transform (compositor-driven) instead of
+     toggling display, since some mobile browsers leave a stale painted
+     layer behind when an absolutely-positioned box with a box-shadow is
+     removed via display: none until something else forces a repaint. */
   .nav-toggle > nav {
-    display: none;
+    display: flex;
     position: absolute;
     top: 100%;
     right: 0.6rem;
@@ -497,10 +501,19 @@ nav a.active {
     padding: 0.5rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     z-index: 10;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-4px);
+    transition: opacity 0.12s ease, transform 0.12s ease, visibility 0.12s;
+    will-change: opacity, transform;
   }
 
   .nav-toggle[open] > nav {
-    display: flex;
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
   }
 
   nav a, .who {
