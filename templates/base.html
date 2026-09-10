@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}FootballSlop{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
@@ -12,6 +13,9 @@
       <a href="{{ url_for('main.index') }}" class="{{ 'active' if request.endpoint == 'main.index' else '' }}">Picks</a>
       <a href="{{ url_for('main.leaderboard') }}" class="{{ 'active' if request.endpoint == 'main.leaderboard' else '' }}">Leaderboard</a>
       <a href="{{ url_for('main.rules') }}" class="{{ 'active' if request.endpoint == 'main.rules' else '' }}">Rules</a>
+      {% if current_user.is_admin() %}
+        <a href="{{ url_for('main.admin_participation') }}" class="{{ 'active' if request.endpoint == 'main.admin_participation' else '' }}">Admin</a>
+      {% endif %}
       <span class="who">{{ current_user.name }}</span>
       <a href="{{ url_for('auth.logout') }}">Log out</a>
     </nav>

@@ -1,13 +1,18 @@
 from collections import defaultdict
 from itertools import groupby
 
-from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
+from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from extensions import db
 from models import SLATE_LABELS, Game, Pick, User, now_eastern
 
 bp = Blueprint("main", __name__)
+
+
+def admin_required():
+    if not current_user.is_admin():
+        abort(403)
 
 
 def current_season():
@@ -208,6 +213,74 @@ def leaderboard():
         record["position"] = position
 
     return render_template("leaderboard.html", records=records)
+
+
+@bp.route("/admin/participation")
+@login_required
+def admin_participation():
+    admin_required()
+
+    season = current_season()
+    weeks = []
+    week = None
+    groups = []
+
+    if season is not None:
+        week_cap = current_week(season)
+        weeks = [
+            w
+            for (w,) in db.session.query(Game.week)
+            .filter(Game.season == season, Game.week <= week_cap)
+            .distinct()
+            .order_by(Game.week)
+            .all()
+        ]
+        requested_week = request.args.get("week", type=int)
+        week = requested_week if requested_week in weeks else week_cap
+
+        games = Game.query.filter_by(season=season, week=week).order_by(Game.kickoff_at).all()
+        all_users = User.query.order_by(User.name).all()
+
+        picked_ids_by_game = defaultdict(set)
+        game_ids = [g.id for g in games]
+        if game_ids:
+            for user_id, game_id in (
+                db.session.query(Pick.user_id, Pick.game_id).filter(Pick.game_id.in_(game_ids)).all()
+            ):
+                picked_ids_by_game[game_id].add(user_id)
+
+        def split(picked_ids):
+            picked = [u.name for u in all_users if u.id in picked_ids]
+            not_picked = [u.name for u in all_users if u.id not in picked_ids]
+            return picked, not_picked
+
+        # Primetime: each game is picked independently, so report per game.
+        for game in games:
+            if game.slate != "primetime":
+                continue
+            picked, not_picked = split(picked_ids_by_game.get(game.id, set()))
+            groups.append({
+                "label": f"{game.away_team} @ {game.home_team}",
+                "picked": picked,
+                "not_picked": not_picked,
+            })
+
+        # Early/late: only one pick allowed across the whole slate, so
+        # report participation for the slate as a whole — never which
+        # specific game within it someone chose.
+        for slate in ("early", "late"):
+            slate_game_ids = [g.id for g in games if g.slate == slate]
+            if not slate_game_ids:
+                continue
+            picked_ids = set()
+            for game_id in slate_game_ids:
+                picked_ids |= picked_ids_by_game.get(game_id, set())
+            picked, not_picked = split(picked_ids)
+            groups.append({"label": SLATE_LABELS[slate], "picked": picked, "not_picked": not_picked})
+
+    return render_template(
+        "admin_participation.html", groups=groups, season=season, week=week, weeks=weeks
+    )
 
 
 @bp.route("/rules")

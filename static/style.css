@@ -393,7 +393,40 @@ nav a.active {
   line-height: 1.7;
 }
 
+.participation-group {
+  margin-bottom: 1.5rem;
+}
+
+.participation-group h2 {
+  margin-bottom: 0.5rem;
+}
+
+.participation-cols {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.participation-cols > div {
+  flex: 1;
+  min-width: 160px;
+}
+
+.participation-cols h3 {
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin: 0 0 0.4rem;
+}
+
 @media (max-width: 480px) {
+  html {
+    /* Scales every rem-based size (text, padding, gaps) proportionally,
+       on top of the component-specific bumps below. */
+    font-size: 112%;
+  }
+
   :root {
     --row-indicator-w: 0.75rem;
     --row-gap: 0.2rem;

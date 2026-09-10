@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Admin — FootballSlop{% endblock %}
+
+{% block content %}
+  <h1>Pick Participation</h1>
+
+  {% if weeks %}
+    <form method="get" class="week-select">
+      <select name="week" aria-label="Week" onchange="this.form.submit()">
+        {% for w in weeks %}
+          <option value="{{ w }}" {% if w == week %}selected{% endif %}>Week {{ w }}</option>
+        {% endfor %}
+      </select>
+      <noscript><button type="submit">Go</button></noscript>
+    </form>
+  {% endif %}
+
+  {% if not groups %}
+    <p>No games for this week.</p>
+  {% else %}
+    {% for group in groups %}
+      <section class="participation-group">
+        <h2>{{ group.label }}</h2>
+        <div class="participation-cols">
+          <div>
+            <h3>Picked ({{ group.picked | length }})</h3>
+            {% if group.picked %}
+              <ul class="team-picks">{% for name in group.picked %}<li>{{ name }}</li>{% endfor %}</ul>
+            {% else %}
+              <p class="pending">No one yet</p>
+            {% endif %}
+          </div>
+          <div>
+            <h3>Not picked ({{ group.not_picked | length }})</h3>
+            {% if group.not_picked %}
+              <ul class="team-picks">{% for name in group.not_picked %}<li>{{ name }}</li>{% endfor %}</ul>
+            {% else %}
+              <p class="pending">Everyone's picked</p>
+            {% endif %}
+          </div>
+        </div>
+      </section>
+    {% endfor %}
+  {% endif %}
+{% endblock %}

@@ -68,6 +68,11 @@ class User(UserMixin, db.Model):
 
     picks = db.relationship("Pick", back_populates="user")
 
+    def is_admin(self):
+        from flask import current_app
+
+        return self.email.lower() in current_app.config["ADMIN_EMAILS"]
+
 
 class Game(db.Model):
     id = db.Column(db.Integer, primary_key=True)

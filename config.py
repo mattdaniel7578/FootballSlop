@@ -33,6 +33,13 @@ class Config:
     ODDS_SYNC_MINUTES = int(os.environ.get("ODDS_SYNC_MINUTES", "60"))
     SEASON_START_DATE = SEASON_START_DATE
 
+    # Gates the /admin/participation tab only — comma-separated emails.
+    ADMIN_EMAILS = {
+        email.strip().lower()
+        for email in os.environ.get("ADMIN_EMAILS", "").split(",")
+        if email.strip()
+    }
+
     SESSION_COOKIE_SECURE = IS_PRODUCTION
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"

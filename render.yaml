@@ -26,6 +26,8 @@ services:
         sync: false
       - key: ODDS_SYNC_MINUTES
         value: 60
+      - key: ADMIN_EMAILS
+        value: mattdaniel7578@gmail.com
 
 databases:
   - name: footballslop-db
