@@ -173,36 +173,41 @@ def leaderboard():
 
     records = []
     for user in users:
-        decided_picks = (
+        picks = (
             Pick.query.filter_by(user_id=user.id)
             .join(Game)
-            .filter(Game.winner.isnot(None))
+            .order_by(Game.season.desc(), Game.week.desc(), Game.kickoff_at)
             .all()
         )
+        if user.id != current_user.id:
+            # Never reveal someone else's pick before their game has locked —
+            # only what the main Picks page would already show you.
+            picks = [p for p in picks if p.game.is_locked()]
+
+        decided_picks = [p for p in picks if p.game.winner is not None]
         ties = sum(1 for p in decided_picks if p.game.winner == "PUSH")
         wins = sum(1 for p in decided_picks if p.game.winner != "PUSH" and p.picked_team == p.game.winner)
         losses = len(decided_picks) - wins - ties
-        records.append({"user": user, "wins": wins, "losses": losses, "ties": ties})
+        pct = round(wins / (wins + losses) * 100) if (wins + losses) else None
+        records.append({
+            "user": user, "wins": wins, "losses": losses, "ties": ties, "pct": pct, "picks": picks,
+        })
 
     records.sort(key=lambda r: (-r["wins"], r["losses"], r["user"].name.lower()))
+
+    # Standard competition ranking (1, 1, 3, ...): players tied on
+    # wins/losses share a position, and the next distinct record's
+    # position skips ahead by however many tied for the rank before it.
+    last_record_key = None
+    position = 0
+    for rank, record in enumerate(records, start=1):
+        record_key = (record["wins"], record["losses"])
+        if record_key != last_record_key:
+            position = rank
+            last_record_key = record_key
+        record["position"] = position
+
     return render_template("leaderboard.html", records=records)
-
-
-@bp.route("/leaderboard/<int:user_id>")
-@login_required
-def user_picks(user_id):
-    picked_user = User.query.get_or_404(user_id)
-    picks = (
-        Pick.query.filter_by(user_id=user_id)
-        .join(Game)
-        .order_by(Game.season.desc(), Game.week.desc(), Game.kickoff_at)
-        .all()
-    )
-    if user_id != current_user.id:
-        # Never reveal someone else's pick before their game has locked —
-        # only what the main Picks page would already show you.
-        picks = [p for p in picks if p.game.is_locked()]
-    return render_template("user_picks.html", picked_user=picked_user, picks=picks)
 
 
 @bp.route("/rules")

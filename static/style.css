@@ -210,6 +210,7 @@ nav a.active {
   align-self: center;
   text-align: center;
   color: var(--muted);
+  font-size: 0.75rem;
 }
 
 .pick-breakdown summary .row-indicator:last-child::after {
@@ -290,6 +291,88 @@ nav a.active {
   text-align: left;
   padding: 0.6rem 0.5rem;
   border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.data-table th {
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border-bottom: 2px solid var(--border);
+}
+
+/* Fixed layout: column widths come only from these declared widths, never
+   from row content — so expanding a detail row can never widen the table. */
+.leaderboard-table {
+  table-layout: fixed;
+}
+
+.leaderboard-table tbody tr.lb-row:hover {
+  background: var(--bg);
+}
+
+.leaderboard-table .my-row {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.position-col {
+  text-align: center;
+  width: 12%;
+}
+
+.position-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  font-weight: 700;
+}
+
+.position-badge.position-first {
+  background: #f5c518;
+  border-color: #f5c518;
+  color: #1a1a1a;
+}
+
+.picks-toggle summary {
+  cursor: pointer;
+  color: var(--accent);
+  list-style: none;
+}
+
+.picks-toggle summary::-webkit-details-marker {
+  display: none;
+}
+
+/* The expanded picks render as a separate full-width row (see the
+   :has() rule below), not inside the narrow "Picks" cell, so a long
+   list can never stretch that column or the table itself. */
+.lb-detail-row {
+  display: none;
+}
+
+.lb-row:has(.picks-toggle[open]) + .lb-detail-row {
+  display: table-row;
+}
+
+.lb-detail-row td {
+  background: var(--bg);
+}
+
+.picks-subgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.3rem 1.5rem;
+  padding: 0.5rem 0.25rem;
+}
+
+.pick-chip {
+  font-size: 0.9rem;
 }
 
 .win {
@@ -313,45 +396,56 @@ nav a.active {
 @media (max-width: 480px) {
   :root {
     --row-indicator-w: 0.75rem;
-    --row-gap: 0.3rem;
+    --row-gap: 0.2rem;
   }
 
   .container {
-    padding: 0.75rem;
+    padding: 0.4rem;
   }
 
   .topbar {
-    padding: 0.6rem 0.85rem;
+    padding: 0.6rem 0.6rem;
     flex-wrap: wrap;
     gap: 0.3rem;
   }
 
   nav a {
     margin-left: 0.6rem;
-  }
-
-  .game-card {
-    padding: 0.5rem 0.4rem;
-  }
-
-  .team-box {
-    padding: 0.4rem 0.35rem;
     font-size: 1.05rem;
   }
 
+  .game-card {
+    padding: 0.5rem 0.25rem;
+  }
+
+  .team-box {
+    padding: 0.45rem 0.2rem;
+    font-size: 1.25rem;
+    line-height: 1.25;
+  }
+
   .at-sep {
-    padding-top: 0.4rem;
+    padding-top: 0.45rem;
+    font-size: 1.1rem;
   }
 
   .game-info {
-    font-size: 0.85rem;
+    font-size: 1rem;
   }
 
   .team-picks {
-    font-size: 0.85rem;
+    font-size: 0.95rem;
   }
 
   .slate-note {
-    font-size: 0.9rem;
+    font-size: 1rem;
+  }
+
+  .data-table {
+    font-size: 1.05rem;
+  }
+
+  .rules-list {
+    font-size: 1.05rem;
   }
 }
