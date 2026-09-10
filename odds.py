@@ -151,8 +151,10 @@ def sync_results(app):
 
 
 def fetch_espn_venues(season, week):
-    """{(home_team, away_team): "Venue, City, ST/Country"} for one week,
-    using ESPN's own team display names (which match the-odds-api's)."""
+    """{(home_team, away_team): "Venue Name"} for one week, using ESPN's own
+    team display names (which match the-odds-api's) — just the stadium
+    name, since that alone is enough to flag a neutral-site/international
+    game without the extra city/state text."""
     resp = requests.get(
         ESPN_SCOREBOARD_URL,
         params={"seasontype": 2, "week": week, "year": season},
@@ -168,17 +170,11 @@ def fetch_espn_venues(season, week):
         if not name:
             continue
 
-        address = venue.get("address") or {}
-        city = address.get("city")
-        country = address.get("country")
-        region = address.get("state") if country in (None, "USA") else country
-        location = ", ".join(part for part in (name, city, region) if part)
-
         competitors = comp.get("competitors", [])
         home = next((c["team"]["displayName"] for c in competitors if c.get("homeAway") == "home"), None)
         away = next((c["team"]["displayName"] for c in competitors if c.get("homeAway") == "away"), None)
         if home and away:
-            venues[(home, away)] = location
+            venues[(home, away)] = name
 
     return venues
 

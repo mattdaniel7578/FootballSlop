@@ -15,6 +15,12 @@ def now_eastern():
     return datetime.now(EASTERN).replace(tzinfo=None)
 
 
+def short_team_name(full_name):
+    """"New England Patriots" -> "Patriots" — display only; the full name
+    is still what's stored/submitted/matched against favorite_team."""
+    return full_name.rsplit(" ", 1)[-1] if full_name else full_name
+
+
 SLATE_LABELS = {
     "primetime": "Primetime",
     "early": "Early games (1:00 PM ET + London)",

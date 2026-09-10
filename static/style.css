@@ -55,6 +55,29 @@ body {
   color: var(--text);
 }
 
+.nav-desktop {
+  display: flex;
+  align-items: center;
+}
+
+/* Mobile-only hamburger menu — a completely separate <nav> from
+   .nav-desktop, so there's no fighting over a single element's default
+   open/closed visibility across breakpoints. */
+.nav-toggle {
+  display: none;
+}
+
+.nav-toggle > summary {
+  cursor: pointer;
+  list-style: none;
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.nav-toggle > summary::-webkit-details-marker {
+  display: none;
+}
+
 nav a {
   margin-left: 1rem;
   color: var(--accent);
@@ -67,6 +90,7 @@ nav a.active {
 }
 
 .who {
+  margin-left: 1rem;
   color: var(--muted);
 }
 
@@ -325,7 +349,14 @@ nav a.active {
 
 .position-col {
   text-align: center;
-  width: 12%;
+  width: 9%;
+}
+
+.player-col {
+  width: 34%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .position-badge {
@@ -431,29 +462,69 @@ nav a.active {
   /* Same text sizes as desktop — just reclaim the padding/gaps around
      them so less of a narrow screen is spent on empty margin. */
   :root {
-    --row-indicator-w: 0.75rem;
-    --row-gap: 0.2rem;
+    --row-indicator-w: 0.85rem;
+    --row-gap: 0.3rem;
   }
 
   .container {
-    padding: 0.4rem;
+    padding: 0.75rem;
   }
 
   .topbar {
     padding: 0.6rem 0.6rem;
-    flex-wrap: wrap;
-    gap: 0.3rem;
+    position: relative;
   }
 
-  nav a {
-    margin-left: 0.6rem;
+  .nav-desktop {
+    display: none;
   }
 
-  .game-card {
+  .nav-toggle {
+    display: block;
+  }
+
+  /* Nav hidden until the hamburger is tapped, then drops down as its own
+     panel — it doesn't push page content or change the top bar's height. */
+  .nav-toggle > nav {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0.6rem;
+    left: 0.6rem;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.1rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+  }
+
+  .nav-toggle[open] > nav {
+    display: flex;
+  }
+
+  nav a, .who {
+    margin-left: 0;
     padding: 0.5rem 0.25rem;
   }
 
+  .game-card {
+    padding: 0.6rem 0.4rem;
+  }
+
   .team-box {
-    padding: 0.45rem 0.2rem;
+    padding: 0.5rem 0.35rem;
+  }
+
+  .position-col {
+    width: 8%;
+  }
+
+  .player-col {
+    width: 38%;
+    font-size: 0.85em;
   }
 }

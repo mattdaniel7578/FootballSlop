@@ -46,14 +46,14 @@
                   <span class="row-indicator" aria-hidden="true"></span>
                   <div class="team-col">
                     <span class="team-box {{ breakdown.my_pick_class if breakdown and current_pick == game.away_team }}">
-                      {{ game.away_team }} {{ game.spread_display(game.away_team) }}
+                      {{ game.away_team|short_team }} {{ game.spread_display(game.away_team) }}
                       {% if breakdown and breakdown.total %} &middot; {{ breakdown.away_pct }}%{% endif %}
                     </span>
                   </div>
                   <span class="at-sep">@</span>
                   <div class="team-col">
                     <span class="team-box {{ breakdown.my_pick_class if breakdown and current_pick == game.home_team }}">
-                      {{ game.home_team }} {{ game.spread_display(game.home_team) }}
+                      {{ game.home_team|short_team }} {{ game.spread_display(game.home_team) }}
                       {% if breakdown and breakdown.total %} &middot; {{ breakdown.home_pct }}%{% endif %}
                     </span>
                   </div>
@@ -85,7 +85,7 @@
                 <div class="team-col">
                   <button type="submit" name="picked_team" value="{{ game.away_team }}"
                     class="team-box team-btn {{ 'selected' if current_pick == game.away_team }}">
-                    {{ game.away_team }} {{ game.spread_display(game.away_team) }}
+                    {{ game.away_team|short_team }} {{ game.spread_display(game.away_team) }}
                   </button>
                 </div>
 
@@ -94,7 +94,7 @@
                 <div class="team-col">
                   <button type="submit" name="picked_team" value="{{ game.home_team }}"
                     class="team-box team-btn {{ 'selected' if current_pick == game.home_team }}">
-                    {{ game.home_team }} {{ game.spread_display(game.home_team) }}
+                    {{ game.home_team|short_team }} {{ game.spread_display(game.home_team) }}
                   </button>
                 </div>
 

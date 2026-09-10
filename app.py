@@ -25,10 +25,11 @@ def create_app():
 
     import auth
     import main
-    from models import User
+    from models import User, short_team_name
 
     app.register_blueprint(auth.bp)
     app.register_blueprint(main.bp)
+    app.jinja_env.filters["short_team"] = short_team_name
 
     @login_manager.user_loader
     def load_user(user_id):

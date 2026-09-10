@@ -5,7 +5,7 @@ from flask import Blueprint, abort, current_app, flash, redirect, render_templat
 from flask_login import current_user, login_required
 
 from extensions import db
-from models import SLATE_LABELS, Game, Pick, User, now_eastern
+from models import SLATE_LABELS, Game, Pick, User, now_eastern, short_team_name
 
 bp = Blueprint("main", __name__)
 
@@ -260,7 +260,7 @@ def admin_participation():
                 continue
             picked, not_picked = split(picked_ids_by_game.get(game.id, set()))
             groups.append({
-                "label": f"{game.away_team} @ {game.home_team}",
+                "label": f"{short_team_name(game.away_team)} @ {short_team_name(game.home_team)}",
                 "picked": picked,
                 "not_picked": not_picked,
             })
