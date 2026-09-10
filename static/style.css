@@ -27,11 +27,18 @@
 
 * { box-sizing: border-box; }
 
+html {
+  /* Belt-and-suspenders: nothing should ever be able to force a
+     horizontal scrollbar, regardless of content. */
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  overflow-wrap: break-word;
 }
 
 .topbar {
@@ -421,12 +428,8 @@ nav a.active {
 }
 
 @media (max-width: 480px) {
-  html {
-    /* Scales every rem-based size (text, padding, gaps) proportionally,
-       on top of the component-specific bumps below. */
-    font-size: 112%;
-  }
-
+  /* Same text sizes as desktop — just reclaim the padding/gaps around
+     them so less of a narrow screen is spent on empty margin. */
   :root {
     --row-indicator-w: 0.75rem;
     --row-gap: 0.2rem;
@@ -444,7 +447,6 @@ nav a.active {
 
   nav a {
     margin-left: 0.6rem;
-    font-size: 1.05rem;
   }
 
   .game-card {
@@ -453,32 +455,5 @@ nav a.active {
 
   .team-box {
     padding: 0.45rem 0.2rem;
-    font-size: 1.25rem;
-    line-height: 1.25;
-  }
-
-  .at-sep {
-    padding-top: 0.45rem;
-    font-size: 1.1rem;
-  }
-
-  .game-info {
-    font-size: 1rem;
-  }
-
-  .team-picks {
-    font-size: 0.95rem;
-  }
-
-  .slate-note {
-    font-size: 1rem;
-  }
-
-  .data-table {
-    font-size: 1.05rem;
-  }
-
-  .rules-list {
-    font-size: 1.05rem;
   }
 }
