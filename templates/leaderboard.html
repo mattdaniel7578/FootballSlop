@@ -10,9 +10,9 @@
     <table class="data-table leaderboard-table">
       <thead>
         <tr>
-          <th class="position-col">Pos</th>
+          <th class="rank-col">Pos</th>
           <th class="player-col">Player</th>
-          <th>Record</th>
+          <th class="record-col">Record</th>
           <th class="position-col">%</th>
           <th>Picks</th>
         </tr>
@@ -20,9 +20,9 @@
       <tbody>
         {% for r in records %}
           <tr class="lb-row {{ 'my-row' if r.user.id == current_user.id }}">
-            <td class="position-col"><span class="position-badge {{ 'position-first' if r.position == 1 }}">{{ r.position }}</span></td>
+            <td class="rank-col"><span class="position-badge">{{ r.position }}</span></td>
             <td class="player-col">{{ r.user.name }}</td>
-            <td>{{ r.wins }}-{{ r.losses }}-{{ r.ties }}</td>
+            <td class="record-col">{{ r.wins }}-{{ r.losses }}-{{ r.ties }}</td>
             <td class="position-col">{{ "%d%%" | format(r.pct) if r.pct is not none else "—" }}</td>
             <td>
               {% if r.picks %}

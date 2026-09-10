@@ -64,6 +64,15 @@ def compute_snap_at(kickoff_et):
     return kickoff_et - timedelta(hours=24)
 
 
+def format_snap_eta(dt):
+    """datetime(2026, 9, 11, 14, 0) -> "9/11 2 pm" — compact, no leading
+    zeros, minutes only shown when non-zero."""
+    hour12 = dt.hour % 12 or 12
+    ampm = "am" if dt.hour < 12 else "pm"
+    minute_part = f":{dt.minute:02d}" if dt.minute else ""
+    return f"{dt.month}/{dt.day} {hour12}{minute_part} {ampm}"
+
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     google_sub = db.Column(db.String(64), unique=True, nullable=False)

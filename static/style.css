@@ -347,34 +347,30 @@ nav a.active {
   background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
+.rank-col {
+  text-align: center;
+  width: 14%;
+}
+
 .position-col {
   text-align: center;
-  width: 9%;
+  width: 8%;
+}
+
+.record-col {
+  width: 14%;
 }
 
 .player-col {
-  width: 34%;
+  width: 30%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .position-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 1.75rem;
-  height: 1.75rem;
-  border-radius: 50%;
-  background: var(--bg);
-  border: 1px solid var(--border);
   font-weight: 700;
-}
-
-.position-badge.position-first {
-  background: #f5c518;
-  border-color: #f5c518;
-  color: #1a1a1a;
+  font-size: 0.8em;
 }
 
 .picks-toggle summary {
@@ -519,12 +515,21 @@ nav a.active {
     padding: 0.5rem 0.35rem;
   }
 
+  .rank-col {
+    width: 18%;
+  }
+
   .position-col {
     width: 8%;
   }
 
+  .record-col {
+    width: 12%;
+    font-size: 0.85em;
+  }
+
   .player-col {
-    width: 38%;
+    width: 32%;
     font-size: 0.85em;
   }
 }

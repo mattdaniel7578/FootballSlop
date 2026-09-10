@@ -215,6 +215,31 @@ def leaderboard():
     return render_template("leaderboard.html", records=records)
 
 
+@bp.route("/lines")
+@login_required
+def lines():
+    season = current_season()
+    weeks = []
+    week = None
+    games = []
+
+    if season is not None:
+        week_cap = current_week(season)
+        weeks = [
+            w
+            for (w,) in db.session.query(Game.week)
+            .filter(Game.season == season, Game.week <= week_cap)
+            .distinct()
+            .order_by(Game.week)
+            .all()
+        ]
+        requested_week = request.args.get("week", type=int)
+        week = requested_week if requested_week in weeks else week_cap
+        games = Game.query.filter_by(season=season, week=week).order_by(Game.kickoff_at).all()
+
+    return render_template("lines.html", games=games, season=season, week=week, weeks=weeks)
+
+
 @bp.route("/admin/participation")
 @login_required
 def admin_participation():
@@ -224,6 +249,7 @@ def admin_participation():
     weeks = []
     week = None
     groups = []
+    games = []
 
     if season is not None:
         week_cap = current_week(season)

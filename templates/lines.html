@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Lines — FootballSlop{% endblock %}
+
+{% block content %}
+  <h1>Lines</h1>
+
+  {% if weeks %}
+    <form method="get" class="week-select">
+      <select name="week" aria-label="Week" onchange="this.form.submit()">
+        {% for w in weeks %}
+          <option value="{{ w }}" {% if w == week %}selected{% endif %}>Week {{ w }}</option>
+        {% endfor %}
+      </select>
+      <noscript><button type="submit">Go</button></noscript>
+    </form>
+  {% endif %}
+
+  {% if not games %}
+    <p>No games for this week.</p>
+  {% else %}
+    <table class="data-table">
+      <thead>
+        <tr><th>Game</th><th>Line</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        {% for game in games %}
+          <tr>
+            <td>{{ game.away_team|short_team }} @ {{ game.home_team|short_team }}</td>
+            <td>{{ game.favorite_team|short_team }} {{ game.spread_display(game.favorite_team) }}</td>
+            <td>
+              {% if game.line_snapshot_at %}
+                Snapped {{ game.line_snapshot_at.strftime('%a %I:%M %p') }} ET
+              {% elif game.is_locked() %}
+                Manual
+              {% else %}
+                <span class="pending">Live</span> (Snaps {{ compute_snap_at(game.kickoff_at)|snap_eta }} ET)
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+{% endblock %}
