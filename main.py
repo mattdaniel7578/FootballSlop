@@ -35,6 +35,7 @@ def current_week(season):
 
 
 @bp.route("/")
+@login_required
 def index():
     season = current_season()
     weeks = []
@@ -58,10 +59,8 @@ def index():
             Game.query.filter_by(season=season, week=week).order_by(Game.kickoff_at).all()
         )
 
-    my_picks = {}
-    if current_user.is_authenticated:
-        picks = Pick.query.filter_by(user_id=current_user.id).all()
-        my_picks = {p.game_id: p.picked_team for p in picks}
+    picks = Pick.query.filter_by(user_id=current_user.id).all()
+    my_picks = {p.game_id: p.picked_team for p in picks}
 
     # Consecutive runs of the same slate, in kickoff order — e.g. a Thursday
     # primetime game forms its own leading group, separate from the
@@ -154,6 +153,7 @@ def make_pick(game_id):
 
 
 @bp.route("/leaderboard")
+@login_required
 def leaderboard():
     users = User.query.order_by(User.name).all()
 
@@ -174,6 +174,7 @@ def leaderboard():
 
 
 @bp.route("/leaderboard/<int:user_id>")
+@login_required
 def user_picks(user_id):
     picked_user = User.query.get_or_404(user_id)
     picks = (
@@ -186,5 +187,6 @@ def user_picks(user_id):
 
 
 @bp.route("/rules")
+@login_required
 def rules():
     return render_template("rules.html")

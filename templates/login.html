@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>FootballSlop</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="login-page">
+    <h1>FootballSlop</h1>
+    <a class="login-btn" href="{{ url_for('auth.start_google') }}">Log in with Google</a>
+  </main>
+</body>
+</html>

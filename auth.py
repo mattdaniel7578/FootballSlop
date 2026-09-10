@@ -1,4 +1,4 @@
-from flask import Blueprint, redirect, url_for
+from flask import Blueprint, redirect, render_template, request, session, url_for
 from flask_login import login_user, logout_user
 
 from extensions import db, oauth
@@ -19,8 +19,25 @@ def register_google_client(state):
     )
 
 
+def _is_safe_next(next_url):
+    return bool(next_url) and next_url.startswith("/") and not next_url.startswith("//")
+
+
 @bp.route("/login")
 def login():
+    # Everything in the app requires login, so most visits arrive here via
+    # login_required's own "next" redirect — stash it in the session so
+    # start_google() (fired by the button click) can carry it through the
+    # OAuth round trip, landing people back where they were headed.
+    next_url = request.args.get("next", "")
+    if _is_safe_next(next_url):
+        session["next"] = next_url
+
+    return render_template("login.html")
+
+
+@bp.route("/login/google")
+def start_google():
     redirect_uri = url_for("auth.callback", _external=True)
     return oauth.google.authorize_redirect(redirect_uri)
 
@@ -52,11 +69,15 @@ def callback():
         user.picture = userinfo.get("picture")
     db.session.commit()
 
-    login_user(user)
-    return redirect(url_for("main.index"))
+    # remember=True: once someone has logged in, keep them logged in across
+    # browser restarts (see REMEMBER_COOKIE_* in config.py) until they log out.
+    login_user(user, remember=True)
+
+    next_url = session.pop("next", None)
+    return redirect(next_url if _is_safe_next(next_url) else url_for("main.index"))
 
 
 @bp.route("/logout")
 def logout():
     logout_user()
-    return redirect(url_for("main.index"))
+    return redirect(url_for("auth.login"))

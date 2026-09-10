@@ -1,5 +1,5 @@
 import os
-from datetime import date
+from datetime import date, timedelta
 
 from dotenv import load_dotenv
 
@@ -36,3 +36,10 @@ class Config:
     SESSION_COOKIE_SECURE = IS_PRODUCTION
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
+
+    # "Remember me" cookie (see login_user(..., remember=True) in auth.py) —
+    # keeps someone logged in across browser restarts until they log out.
+    REMEMBER_COOKIE_DURATION = timedelta(days=365)
+    REMEMBER_COOKIE_SECURE = IS_PRODUCTION
+    REMEMBER_COOKIE_HTTPONLY = True
+    REMEMBER_COOKIE_SAMESITE = "Lax"

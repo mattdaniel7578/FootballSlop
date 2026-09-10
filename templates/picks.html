@@ -85,35 +85,23 @@
               <form method="post" action="{{ url_for('main.make_pick', game_id=game.id) }}" class="pick-row">
                 <span class="row-indicator" aria-hidden="true"></span>
                 <div class="team-col">
-                  {% if current_user.is_authenticated %}
-                    <button type="submit" name="picked_team" value="{{ game.away_team }}"
-                      class="team-box team-btn {{ 'selected' if current_pick == game.away_team }}">
-                      {{ game.away_team }} {{ game.spread_display(game.away_team) }}
-                    </button>
-                  {% else %}
-                    <div class="team-box team-label">{{ game.away_team }} {{ game.spread_display(game.away_team) }}</div>
-                  {% endif %}
+                  <button type="submit" name="picked_team" value="{{ game.away_team }}"
+                    class="team-box team-btn {{ 'selected' if current_pick == game.away_team }}">
+                    {{ game.away_team }} {{ game.spread_display(game.away_team) }}
+                  </button>
                 </div>
 
                 <span class="at-sep">@</span>
 
                 <div class="team-col">
-                  {% if current_user.is_authenticated %}
-                    <button type="submit" name="picked_team" value="{{ game.home_team }}"
-                      class="team-box team-btn {{ 'selected' if current_pick == game.home_team }}">
-                      {{ game.home_team }} {{ game.spread_display(game.home_team) }}
-                    </button>
-                  {% else %}
-                    <div class="team-box team-label">{{ game.home_team }} {{ game.spread_display(game.home_team) }}</div>
-                  {% endif %}
+                  <button type="submit" name="picked_team" value="{{ game.home_team }}"
+                    class="team-box team-btn {{ 'selected' if current_pick == game.home_team }}">
+                    {{ game.home_team }} {{ game.spread_display(game.home_team) }}
+                  </button>
                 </div>
 
                 <span class="row-indicator"></span>
               </form>
-
-              {% if not current_user.is_authenticated %}
-                <p class="login-hint"><a href="{{ url_for('auth.login') }}">Log in with Google</a> to pick.</p>
-              {% endif %}
             {% endif %}
           </div>
         {% endfor %}

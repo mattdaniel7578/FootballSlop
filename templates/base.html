@@ -12,12 +12,8 @@
       <a href="{{ url_for('main.index') }}" class="{{ 'active' if request.endpoint == 'main.index' else '' }}">Picks</a>
       <a href="{{ url_for('main.leaderboard') }}" class="{{ 'active' if request.endpoint in ('main.leaderboard', 'main.user_picks') else '' }}">Leaderboard</a>
       <a href="{{ url_for('main.rules') }}" class="{{ 'active' if request.endpoint == 'main.rules' else '' }}">Rules</a>
-      {% if current_user.is_authenticated %}
-        <span class="who">{{ current_user.name }}</span>
-        <a href="{{ url_for('auth.logout') }}">Log out</a>
-      {% else %}
-        <a href="{{ url_for('auth.login') }}">Log in with Google</a>
-      {% endif %}
+      <span class="who">{{ current_user.name }}</span>
+      <a href="{{ url_for('auth.logout') }}">Log out</a>
     </nav>
   </header>
 
