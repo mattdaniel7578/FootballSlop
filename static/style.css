@@ -537,15 +537,19 @@ nav a.active {
     width: 8%;
   }
 
+  .leaderboard-table td, .leaderboard-table th {
+    font-size: 0.85em;
+  }
+
   .record-col {
     width: 20%;
     white-space: nowrap;
-    font-size: 0.85em;
+    font-size: 0.78em;
   }
 
   .player-col {
     width: 30%;
-    font-size: 0.85em;
+    font-size: 0.78em;
   }
 
   .lines-table {
