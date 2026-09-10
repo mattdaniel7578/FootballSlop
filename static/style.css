@@ -6,6 +6,12 @@
   --muted: #6b6b6b;
   --accent: #0b5fff;
   --border: #e2e2e0;
+
+  /* Width of the reserved arrow slot at each end of a pick-row, and the
+     row's flex gap next to it — shared with .game-info's padding so the
+     date/time and location text line up with the team buttons' edges. */
+  --row-indicator-w: 1.1rem;
+  --row-gap: 0.5rem;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -75,6 +81,7 @@ nav a.active {
   display: flex;
   justify-content: space-between;
   gap: 0.75rem;
+  padding: 0 calc(var(--row-indicator-w) + var(--row-gap));
   color: var(--muted);
   font-size: 0.78rem;
   margin-bottom: 0.4rem;
@@ -90,7 +97,7 @@ nav a.active {
 .pick-row {
   display: flex;
   align-items: flex-start;
-  gap: 0.5rem;
+  gap: var(--row-gap);
 }
 
 .team-col {
@@ -114,6 +121,8 @@ nav a.active {
   background: var(--bg);
   color: var(--text);
   font: inherit;
+  font-size: 0.95rem;
+  line-height: 1.3;
   text-align: center;
 }
 
@@ -125,7 +134,7 @@ nav a.active {
   border-color: var(--accent);
 }
 
-.team-btn.selected {
+.team-box.selected {
   background: var(--accent);
   border-color: var(--accent);
   color: white;
@@ -145,18 +154,6 @@ nav a.active {
   display: none;
 }
 
-.pick-breakdown summary::after {
-  content: "▾";
-  flex: 0 0 auto;
-  align-self: center;
-  color: var(--muted);
-  margin-left: 0.15rem;
-}
-
-.pick-breakdown[open] summary::after {
-  content: "▴";
-}
-
 .pick-breakdown .pick-row {
   margin-top: 0.4rem;
 }
@@ -164,6 +161,24 @@ nav a.active {
 .at-sep-spacer {
   flex: 0 0 auto;
   width: 1.3rem;
+}
+
+/* Reserved at a fixed width on both ends of every row (locked or not, open
+   or not) so the row is symmetric and the @ separator lines up regardless
+   of whether an arrow is actually rendered on the right. */
+.row-indicator {
+  flex: 0 0 var(--row-indicator-w);
+  align-self: center;
+  text-align: center;
+  color: var(--muted);
+}
+
+.pick-breakdown summary .row-indicator:last-child::after {
+  content: "▾";
+}
+
+.pick-breakdown[open] summary .row-indicator:last-child::after {
+  content: "▴";
 }
 
 .team-picks {
@@ -259,4 +274,46 @@ nav a.active {
 
 .rules-list {
   line-height: 1.7;
+}
+
+@media (max-width: 480px) {
+  :root {
+    --row-indicator-w: 0.9rem;
+    --row-gap: 0.35rem;
+  }
+
+  .container {
+    padding: 0.75rem;
+  }
+
+  .topbar {
+    padding: 0.6rem 0.85rem;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+
+  nav a {
+    margin-left: 0.6rem;
+  }
+
+  .game-card {
+    padding: 0.5rem 0.55rem;
+  }
+
+  .team-box {
+    padding: 0.4rem 0.35rem;
+    font-size: 0.82rem;
+  }
+
+  .at-sep {
+    padding-top: 0.4rem;
+  }
+
+  .game-info {
+    font-size: 0.7rem;
+  }
+
+  .team-picks {
+    font-size: 0.72rem;
+  }
 }

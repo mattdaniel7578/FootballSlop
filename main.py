@@ -1,4 +1,5 @@
 from collections import defaultdict
+from itertools import groupby
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
@@ -7,8 +8,6 @@ from extensions import db
 from models import SLATE_LABELS, Game, Pick, User, now_eastern
 
 bp = Blueprint("main", __name__)
-
-SLATE_ORDER = ["primetime", "early", "late"]
 
 
 def current_season():
@@ -64,15 +63,13 @@ def index():
         picks = Pick.query.filter_by(user_id=current_user.id).all()
         my_picks = {p.game_id: p.picked_team for p in picks}
 
-    games_by_slate = {slate: [] for slate in SLATE_ORDER}
-    for game in games:
-        games_by_slate.setdefault(game.slate, []).append(game)
-
-    slate_picks = {}
-    for slate, slate_games in games_by_slate.items():
-        picked_game_id = next((g.id for g in slate_games if g.id in my_picks), None)
-        if picked_game_id is not None:
-            slate_picks[slate] = my_picks[picked_game_id]
+    # Consecutive runs of the same slate, in kickoff order — e.g. a Thursday
+    # primetime game forms its own leading group, separate from the
+    # Sunday/Monday-night primetime group that follows the early/late games.
+    slate_groups = [
+        {"slate": slate, "games": list(games_in_slate)}
+        for slate, games_in_slate in groupby(games, key=lambda g: g.slate)
+    ]
 
     pick_breakdowns = {}
     locked_game_ids = [g.id for g in games if g.is_locked()]
@@ -105,10 +102,8 @@ def index():
     return render_template(
         "picks.html",
         games=games,
-        games_by_slate=games_by_slate,
-        slate_order=SLATE_ORDER,
+        slate_groups=slate_groups,
         slate_labels=SLATE_LABELS,
-        slate_picks=slate_picks,
         pick_breakdowns=pick_breakdowns,
         my_picks=my_picks,
         season=season,

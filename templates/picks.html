@@ -25,16 +25,14 @@
     </p>
   {% endif %}
 
-  {% for slate in slate_order %}
-    {% set slate_games = games_by_slate.get(slate, []) %}
-    {% if slate_games %}
-      <section class="slate">
-        <h2>{{ slate_labels[slate] }}</h2>
-        {% if slate != "primetime" %}
-          <p class="slate-note">Pick exactly one game — picking another here replaces it.</p>
-        {% endif %}
+  {% for group in slate_groups %}
+    <section class="slate">
+      <h2>{{ slate_labels[group.slate] }}</h2>
+      {% if group.slate != "primetime" %}
+        <p class="slate-note">Pick exactly one game — picking another here replaces it.</p>
+      {% endif %}
 
-        {% for game in slate_games %}
+        {% for game in group.games %}
           {% set locked = game.is_locked() %}
           {% set breakdown = pick_breakdowns.get(game.id) if locked else none %}
           {% set current_pick = my_picks.get(game.id) %}
@@ -47,17 +45,24 @@
             {% if locked %}
               <details class="pick-breakdown">
                 <summary class="pick-row">
-                  <span class="team-box">
-                    {{ game.away_team }} {{ game.spread_display(game.away_team) }}
-                    {% if breakdown and breakdown.total %} &middot; {{ breakdown.away_pct }}%{% endif %}
-                  </span>
+                  <span class="row-indicator" aria-hidden="true"></span>
+                  <div class="team-col">
+                    <span class="team-box {{ 'selected' if current_pick == game.away_team }}">
+                      {{ game.away_team }} {{ game.spread_display(game.away_team) }}
+                      {% if breakdown and breakdown.total %} &middot; {{ breakdown.away_pct }}%{% endif %}
+                    </span>
+                  </div>
                   <span class="at-sep">@</span>
-                  <span class="team-box">
-                    {{ game.home_team }} {{ game.spread_display(game.home_team) }}
-                    {% if breakdown and breakdown.total %} &middot; {{ breakdown.home_pct }}%{% endif %}
-                  </span>
+                  <div class="team-col">
+                    <span class="team-box {{ 'selected' if current_pick == game.home_team }}">
+                      {{ game.home_team }} {{ game.spread_display(game.home_team) }}
+                      {% if breakdown and breakdown.total %} &middot; {{ breakdown.home_pct }}%{% endif %}
+                    </span>
+                  </div>
+                  <span class="row-indicator"></span>
                 </summary>
                 <div class="pick-row">
+                  <span class="row-indicator" aria-hidden="true"></span>
                   <div class="team-col">
                     {% if breakdown and breakdown.away_names %}
                       <ul class="team-picks">
@@ -73,10 +78,12 @@
                       </ul>
                     {% endif %}
                   </div>
+                  <span class="row-indicator"></span>
                 </div>
               </details>
             {% else %}
               <form method="post" action="{{ url_for('main.make_pick', game_id=game.id) }}" class="pick-row">
+                <span class="row-indicator" aria-hidden="true"></span>
                 <div class="team-col">
                   {% if current_user.is_authenticated %}
                     <button type="submit" name="picked_team" value="{{ game.away_team }}"
@@ -100,6 +107,8 @@
                     <div class="team-box team-label">{{ game.home_team }} {{ game.spread_display(game.home_team) }}</div>
                   {% endif %}
                 </div>
+
+                <span class="row-indicator"></span>
               </form>
 
               {% if not current_user.is_authenticated %}
@@ -108,7 +117,6 @@
             {% endif %}
           </div>
         {% endfor %}
-      </section>
-    {% endif %}
+    </section>
   {% endfor %}
 {% endblock %}
