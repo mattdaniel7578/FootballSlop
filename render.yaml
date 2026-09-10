@@ -20,8 +20,12 @@ services:
         sync: false
       - key: GOOGLE_CLIENT_SECRET
         sync: false
-      - key: ADMIN_EMAILS
+      - key: ODDS_API_KEY
         sync: false
+      - key: SEASON_START_DATE
+        sync: false
+      - key: ODDS_SYNC_MINUTES
+        value: 60
 
 databases:
   - name: footballslop-db
