@@ -32,6 +32,12 @@ def callback():
 
     user = User.query.filter_by(google_sub=userinfo["sub"]).first()
     if user is None:
+        # A placeholder account (e.g. picks recorded manually before someone's
+        # first login) is matched by email and claimed with their real
+        # google_sub, instead of splitting into a duplicate account.
+        user = User.query.filter_by(email=userinfo["email"]).first()
+
+    if user is None:
         user = User(
             google_sub=userinfo["sub"],
             email=userinfo["email"],
@@ -40,6 +46,7 @@ def callback():
         )
         db.session.add(user)
     else:
+        user.google_sub = userinfo["sub"]
         user.email = userinfo["email"]
         user.name = userinfo.get("name", user.name)
         user.picture = userinfo.get("picture")

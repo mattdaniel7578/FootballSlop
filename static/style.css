@@ -95,6 +95,23 @@ nav a.active {
   margin: 0;
 }
 
+.pick-breakdown summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.pick-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+  font-size: 0.9rem;
+}
+
+.pick-list li {
+  padding: 0.15rem 0;
+}
+
 .pick-buttons {
   display: flex;
   gap: 0.5rem;

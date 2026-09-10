@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
@@ -72,6 +74,35 @@ def index():
         if picked_game_id is not None:
             slate_picks[slate] = my_picks[picked_game_id]
 
+    pick_breakdowns = {}
+    locked_game_ids = [g.id for g in games if g.is_locked()]
+    if locked_game_ids:
+        entries_by_game = defaultdict(list)
+        locked_picks = (
+            Pick.query.filter(Pick.game_id.in_(locked_game_ids))
+            .join(User)
+            .order_by(User.name)
+            .all()
+        )
+        for p in locked_picks:
+            entries_by_game[p.game_id].append((p.user.name, p.picked_team))
+
+        for game in games:
+            if game.id not in locked_game_ids:
+                continue
+            entries = entries_by_game.get(game.id, [])
+            total = len(entries)
+            home_count = sum(1 for _, team in entries if team == game.home_team)
+            away_count = sum(1 for _, team in entries if team == game.away_team)
+            pick_breakdowns[game.id] = {
+                "entries": entries,
+                "total": total,
+                "home_count": home_count,
+                "away_count": away_count,
+                "home_pct": round(home_count / total * 100) if total else 0,
+                "away_pct": round(away_count / total * 100) if total else 0,
+            }
+
     return render_template(
         "picks.html",
         games=games,
@@ -79,6 +110,7 @@ def index():
         slate_order=SLATE_ORDER,
         slate_labels=SLATE_LABELS,
         slate_picks=slate_picks,
+        pick_breakdowns=pick_breakdowns,
         my_picks=my_picks,
         season=season,
         week=week,

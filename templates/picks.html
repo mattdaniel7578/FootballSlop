@@ -42,7 +42,23 @@
             </div>
 
             {% if game.is_locked() %}
-              <p class="locked">Locked</p>
+              {% set breakdown = pick_breakdowns.get(game.id) %}
+              {% if breakdown and breakdown.total %}
+                <details class="pick-breakdown">
+                  <summary>
+                    {{ game.away_team }} {{ breakdown.away_count }} ({{ breakdown.away_pct }}%)
+                    &middot;
+                    {{ game.home_team }} {{ breakdown.home_count }} ({{ breakdown.home_pct }}%)
+                  </summary>
+                  <ul class="pick-list">
+                    {% for name, team in breakdown.entries %}
+                      <li>{{ name }} — {{ team }}</li>
+                    {% endfor %}
+                  </ul>
+                </details>
+              {% else %}
+                <p class="locked">Locked — no picks made.</p>
+              {% endif %}
             {% elif current_user.is_authenticated %}
               {% set current_pick = my_picks.get(game.id) %}
               <form method="post" action="{{ url_for('main.make_pick', game_id=game.id) }}" class="pick-buttons">
