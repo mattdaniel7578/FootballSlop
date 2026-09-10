@@ -71,62 +71,54 @@ nav a.active {
   margin-bottom: 0.5rem;
 }
 
-.matchup {
+.game-info {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
   gap: 0.75rem;
+  color: var(--muted);
+  font-size: 0.78rem;
   margin-bottom: 0.4rem;
-}
-
-.teams {
-  font-weight: 600;
-}
-
-.kickoff {
-  color: var(--muted);
-  font-size: 0.85rem;
   white-space: nowrap;
+  overflow: hidden;
 }
 
-.locked {
-  color: #c0392b;
-  font-weight: 600;
-  margin: 0;
+.location {
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
-.pick-breakdown summary {
-  cursor: pointer;
-  color: var(--muted);
-  font-size: 0.9rem;
-}
-
-.pick-list {
-  list-style: none;
-  padding: 0;
-  margin: 0.5rem 0 0;
-  font-size: 0.9rem;
-}
-
-.pick-list li {
-  padding: 0.15rem 0;
-}
-
-.pick-buttons {
+.pick-row {
   display: flex;
+  align-items: flex-start;
   gap: 0.5rem;
 }
 
-.team-btn {
+.team-col {
   flex: 1;
+  min-width: 0;
+}
+
+.at-sep {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-weight: 600;
+  padding-top: 0.55rem;
+}
+
+.team-box {
+  display: block;
+  width: 100%;
   padding: 0.5rem 0.6rem;
   border: 1px solid var(--border);
   border-radius: 6px;
   background: var(--bg);
   color: var(--text);
-  cursor: pointer;
   font: inherit;
   text-align: center;
+}
+
+.team-btn {
+  cursor: pointer;
 }
 
 .team-btn:hover {
@@ -138,6 +130,58 @@ nav a.active {
   border-color: var(--accent);
   color: white;
   font-weight: 600;
+}
+
+.pick-breakdown {
+  margin: 0;
+}
+
+.pick-breakdown summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.pick-breakdown summary::-webkit-details-marker {
+  display: none;
+}
+
+.pick-breakdown summary::after {
+  content: "▾";
+  flex: 0 0 auto;
+  align-self: center;
+  color: var(--muted);
+  margin-left: 0.15rem;
+}
+
+.pick-breakdown[open] summary::after {
+  content: "▴";
+}
+
+.pick-breakdown .pick-row {
+  margin-top: 0.4rem;
+}
+
+.at-sep-spacer {
+  flex: 0 0 auto;
+  width: 1.3rem;
+}
+
+.team-picks {
+  list-style: none;
+  padding: 0;
+  margin: 0.3rem 0 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+.team-picks li {
+  padding: 0.05rem 0;
+}
+
+.login-hint {
+  margin: 0.4rem 0 0;
+  font-size: 0.85rem;
 }
 
 .flashes {

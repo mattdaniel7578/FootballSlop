@@ -92,15 +92,14 @@ def index():
                 continue
             entries = entries_by_game.get(game.id, [])
             total = len(entries)
-            home_count = sum(1 for _, team in entries if team == game.home_team)
-            away_count = sum(1 for _, team in entries if team == game.away_team)
+            home_names = [name for name, team in entries if team == game.home_team]
+            away_names = [name for name, team in entries if team == game.away_team]
             pick_breakdowns[game.id] = {
-                "entries": entries,
                 "total": total,
-                "home_count": home_count,
-                "away_count": away_count,
-                "home_pct": round(home_count / total * 100) if total else 0,
-                "away_pct": round(away_count / total * 100) if total else 0,
+                "home_names": home_names,
+                "away_names": away_names,
+                "home_pct": round(len(home_names) / total * 100) if total else 0,
+                "away_pct": round(len(away_names) / total * 100) if total else 0,
             }
 
     return render_template(

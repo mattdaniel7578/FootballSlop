@@ -77,6 +77,11 @@ class Game(db.Model):
     kickoff_at = db.Column(db.DateTime, nullable=False)
     locked = db.Column(db.Boolean, default=False, nullable=False)
 
+    # "Venue, City, ST/Country" — pulled from ESPN's scoreboard (see
+    # odds.sync_venues), since it correctly reflects neutral-site/
+    # international games instead of assuming the home team's own stadium.
+    location = db.Column(db.String(255))
+
     # Set once final: the ATS winner's team name, "PUSH" if the final margin
     # landed exactly on the spread, or None while the game is undecided.
     winner = db.Column(db.String(64))

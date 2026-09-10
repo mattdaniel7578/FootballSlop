@@ -23,6 +23,11 @@ EASTERN = ZoneInfo("America/New_York")
 ODDS_URL = "https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds"
 SCORES_URL = "https://api.the-odds-api.com/v4/sports/americanfootball_nfl/scores"
 
+# Public, no-key-required — the-odds-api doesn't include venue data, but
+# this does, including neutral-site/international games (e.g. London,
+# Melbourne) that a simple "home team's own stadium" guess gets wrong.
+ESPN_SCOREBOARD_URL = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard"
+
 
 def _to_eastern_naive(iso_utc):
     dt = datetime.fromisoformat(iso_utc.replace("Z", "+00:00"))
@@ -138,6 +143,57 @@ def sync_results(app):
     db.session.commit()
 
 
+def fetch_espn_venues(season, week):
+    """{(home_team, away_team): "Venue, City, ST/Country"} for one week,
+    using ESPN's own team display names (which match the-odds-api's)."""
+    resp = requests.get(
+        ESPN_SCOREBOARD_URL,
+        params={"seasontype": 2, "week": week, "year": season},
+        timeout=15,
+    )
+    resp.raise_for_status()
+
+    venues = {}
+    for event in resp.json().get("events", []):
+        comp = event["competitions"][0]
+        venue = comp.get("venue") or {}
+        name = venue.get("fullName")
+        if not name:
+            continue
+
+        address = venue.get("address") or {}
+        city = address.get("city")
+        country = address.get("country")
+        region = address.get("state") if country in (None, "USA") else country
+        location = ", ".join(part for part in (name, city, region) if part)
+
+        competitors = comp.get("competitors", [])
+        home = next((c["team"]["displayName"] for c in competitors if c.get("homeAway") == "home"), None)
+        away = next((c["team"]["displayName"] for c in competitors if c.get("homeAway") == "away"), None)
+        if home and away:
+            venues[(home, away)] = location
+
+    return venues
+
+
+def sync_venues(app):
+    weeks = db.session.query(Game.season, Game.week).distinct().all()
+    for season, week in weeks:
+        try:
+            venues = fetch_espn_venues(season, week)
+        except Exception:
+            logger.exception("ESPN venue sync failed for season=%s week=%s", season, week)
+            continue
+
+        games = Game.query.filter_by(season=season, week=week).all()
+        for game in games:
+            location = venues.get((game.home_team, game.away_team))
+            if location:
+                game.location = location
+
+    db.session.commit()
+
+
 def sync_all(app):
     """Entry point for the scheduled job in app.py."""
     with app.app_context():
@@ -150,3 +206,8 @@ def sync_all(app):
             sync_results(app)
         except Exception:
             logger.exception("DraftKings results sync failed")
+
+        try:
+            sync_venues(app)
+        except Exception:
+            logger.exception("ESPN venue sync failed")
