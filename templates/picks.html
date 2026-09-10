@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Picks — FootballSlop{% endblock %}
+
+{% block content %}
+  <h1>Picks</h1>
+
+  {% if weeks %}
+    <form method="get" class="week-select">
+      <select name="week" aria-label="Week" onchange="this.form.submit()">
+        {% for w in weeks %}
+          <option value="{{ w }}" {% if w == week %}selected{% endif %}>Week {{ w }}</option>
+        {% endfor %}
+      </select>
+      <noscript><button type="submit">Go</button></noscript>
+    </form>
+  {% endif %}
+
+  {% if not games %}
+    <p>
+      {% if not weeks %}
+        No games have been added yet.
+      {% else %}
+        No games for Week {{ week }}.
+      {% endif %}
+    </p>
+  {% endif %}
+
+  {% for slate in slate_order %}
+    {% set slate_games = games_by_slate.get(slate, []) %}
+    {% if slate_games %}
+      <section class="slate">
+        <h2>{{ slate_labels[slate] }}</h2>
+        {% if slate != "primetime" %}
+          <p class="slate-note">Pick exactly one game — picking another here replaces it.</p>
+        {% endif %}
+
+        {% for game in slate_games %}
+          <div class="game-card">
+            <div class="matchup">
+              <span class="teams">{{ game.away_team }} @ {{ game.home_team }}</span>
+              <span class="kickoff">{{ game.kickoff_at.strftime('%a %I:%M %p') }} ET</span>
+            </div>
+
+            {% if game.is_locked() %}
+              <p class="locked">Locked</p>
+            {% elif current_user.is_authenticated %}
+              {% set current_pick = my_picks.get(game.id) %}
+              <form method="post" action="{{ url_for('main.make_pick', game_id=game.id) }}" class="pick-buttons">
+                <button type="submit" name="picked_team" value="{{ game.away_team }}"
+                  class="team-btn {{ 'selected' if current_pick == game.away_team }}">
+                  {{ game.away_team }} {{ game.spread_display(game.away_team) }}
+                </button>
+                <button type="submit" name="picked_team" value="{{ game.home_team }}"
+                  class="team-btn {{ 'selected' if current_pick == game.home_team }}">
+                  {{ game.home_team }} {{ game.spread_display(game.home_team) }}
+                </button>
+              </form>
+            {% else %}
+              <p><a href="{{ url_for('auth.login') }}">Log in with Google</a> to pick.</p>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </section>
+    {% endif %}
+  {% endfor %}
+{% endblock %}

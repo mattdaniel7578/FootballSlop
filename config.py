@@ -1,4 +1,5 @@
 import os
+from datetime import date
 
 from dotenv import load_dotenv
 
@@ -12,6 +13,11 @@ if _database_url.startswith("postgres://"):
 
 IS_PRODUCTION = os.environ.get("FLASK_ENV") == "production"
 
+# Anchors week numbering: the Tuesday that Week 1 starts on (NFL weeks run
+# Tue-Mon). Without it, games are still synced but all default to week 1.
+_season_start = os.environ.get("SEASON_START_DATE", "")
+SEASON_START_DATE = date.fromisoformat(_season_start) if _season_start else None
+
 
 class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY", "dev-only-insecure-key")
@@ -21,11 +27,11 @@ class Config:
     GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
     GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
 
-    ADMIN_EMAILS = {
-        email.strip().lower()
-        for email in os.environ.get("ADMIN_EMAILS", "").split(",")
-        if email.strip()
-    }
+    # From https://the-odds-api.com/ — used to pull DraftKings spreads and
+    # final scores automatically instead of manual entry (see odds.py).
+    ODDS_API_KEY = os.environ.get("ODDS_API_KEY", "")
+    ODDS_SYNC_MINUTES = int(os.environ.get("ODDS_SYNC_MINUTES", "60"))
+    SEASON_START_DATE = SEASON_START_DATE
 
     SESSION_COOKIE_SECURE = IS_PRODUCTION
     SESSION_COOKIE_HTTPONLY = True

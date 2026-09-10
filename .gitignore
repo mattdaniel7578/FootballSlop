@@ -5,3 +5,5 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+.flask_run.log
+.flask_run.err.log

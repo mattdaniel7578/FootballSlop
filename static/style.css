@@ -48,6 +48,11 @@ nav a {
   text-decoration: none;
 }
 
+nav a.active {
+  font-weight: 700;
+  text-decoration: underline;
+}
+
 .who {
   color: var(--muted);
 }
@@ -61,48 +66,61 @@ nav a {
 .game-card {
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 1.25rem;
-  margin-bottom: 1.25rem;
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
-.kickoff, .spread {
+.matchup {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.4rem;
+}
+
+.teams {
+  font-weight: 600;
+}
+
+.kickoff {
   color: var(--muted);
-  margin: 0.25rem 0;
+  font-size: 0.85rem;
+  white-space: nowrap;
 }
 
 .locked {
   color: #c0392b;
   font-weight: 600;
+  margin: 0;
 }
 
-.pick-form label {
-  display: block;
-  margin: 0.5rem 0;
+.pick-buttons {
+  display: flex;
+  gap: 0.5rem;
 }
 
-.pick-form button, .admin-form button {
-  margin-top: 0.75rem;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 6px;
-  background: var(--accent);
-  color: white;
-  cursor: pointer;
-}
-
-.admin-form label {
-  display: block;
-  margin: 0.75rem 0 0.25rem;
-}
-
-.admin-form input {
-  width: 100%;
-  padding: 0.4rem;
+.team-btn {
+  flex: 1;
+  padding: 0.5rem 0.6rem;
   border: 1px solid var(--border);
   border-radius: 6px;
   background: var(--bg);
   color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  text-align: center;
+}
+
+.team-btn:hover {
+  border-color: var(--accent);
+}
+
+.team-btn.selected {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+  font-weight: 600;
 }
 
 .flashes {
@@ -124,4 +142,60 @@ nav a {
 .flash-error {
   background: #f8d7da;
   color: #721c24;
+}
+
+.slate {
+  margin-bottom: 1.5rem;
+}
+
+.slate h2 {
+  margin-bottom: 0.15rem;
+}
+
+.slate-note {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin: 0 0 0.5rem;
+}
+
+.week-select {
+  margin-bottom: 1.25rem;
+}
+
+.week-select select {
+  padding: 0.4rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.data-table th, .data-table td {
+  text-align: left;
+  padding: 0.6rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.win {
+  color: #1a7f37;
+  font-weight: 600;
+}
+
+.loss {
+  color: #c0392b;
+  font-weight: 600;
+}
+
+.pending {
+  color: var(--muted);
+}
+
+.rules-list {
+  line-height: 1.7;
 }

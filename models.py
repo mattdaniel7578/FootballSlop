@@ -10,10 +10,34 @@ EASTERN = ZoneInfo("America/New_York")
 
 def now_eastern():
     # Naive Eastern-time datetime (America/New_York handles the EST/EDT
-    # switch automatically), to match the naive kickoff_at values entered
-    # via the admin form (see templates/admin_add_game.html) — avoids
-    # aware/naive comparison errors in Game.is_locked().
+    # switch automatically), to match the naive kickoff_at values stored on
+    # Game — avoids aware/naive comparison errors in Game.is_locked().
     return datetime.now(EASTERN).replace(tzinfo=None)
+
+
+SLATE_LABELS = {
+    "primetime": "Primetime",
+    "early": "Early games (1:00 PM ET + London)",
+    "late": "Late games (4:05 / 4:25 PM ET)",
+}
+
+
+def classify_slate(kickoff_et):
+    """Bucket a naive-ET kickoff into a picks slate.
+
+    Thu/Mon standalone games are always primetime. Sat/Sun games split by
+    kickoff hour into early (~9:30am London + 1:00pm ET), late (4:05/4:25pm
+    ET), or primetime (Sun/Sat night). Any other standalone weekday game
+    (e.g. a Black Friday game) defaults to primetime.
+    """
+    weekday = kickoff_et.weekday()  # Mon=0 ... Sun=6
+    if weekday in (5, 6):  # Saturday, Sunday
+        if kickoff_et.hour < 16:
+            return "early"
+        if kickoff_et.hour < 20:
+            return "late"
+        return "primetime"
+    return "primetime"
 
 
 class User(UserMixin, db.Model):
@@ -26,16 +50,22 @@ class User(UserMixin, db.Model):
 
     picks = db.relationship("Pick", back_populates="user")
 
-    def is_admin(self):
-        from flask import current_app
-
-        return self.email.lower() in current_app.config["ADMIN_EMAILS"]
-
 
 class Game(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+
+    # The-Odds-API event id, used to upsert games on each DraftKings sync
+    # instead of creating duplicates (see odds.py).
+    external_id = db.Column(db.String(64), unique=True)
+
     season = db.Column(db.Integer, nullable=False)
     week = db.Column(db.Integer, nullable=False)
+
+    # Which picks slate this game belongs to: "primetime" (pick every one),
+    # "early", or "late" (pick exactly one game per slate). See
+    # classify_slate() above.
+    slate = db.Column(db.String(16), nullable=False, default="primetime")
+
     home_team = db.Column(db.String(64), nullable=False)
     away_team = db.Column(db.String(64), nullable=False)
 
@@ -46,7 +76,10 @@ class Game(db.Model):
 
     kickoff_at = db.Column(db.DateTime, nullable=False)
     locked = db.Column(db.Boolean, default=False, nullable=False)
-    winner = db.Column(db.String(64))  # set after the game to score picks later
+
+    # Set once final: the ATS winner's team name, "PUSH" if the final margin
+    # landed exactly on the spread, or None while the game is undecided.
+    winner = db.Column(db.String(64))
 
     picks = db.relationship("Pick", back_populates="game", cascade="all, delete-orphan")
 

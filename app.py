@@ -1,10 +1,13 @@
 import os
+from datetime import datetime
 
 from flask import Flask
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from config import Config
 from extensions import db, login_manager, oauth
+
+IS_DEBUG = os.environ.get("FLASK_ENV") != "production"
 
 
 def create_app():
@@ -34,9 +37,31 @@ def create_app():
     with app.app_context():
         db.create_all()
 
+    _start_odds_scheduler(app)
+
     return app
+
+
+def _start_odds_scheduler(app):
+    # The debug reloader runs two processes; only the child (which actually
+    # serves requests) should own the scheduler, or jobs would fire twice.
+    if IS_DEBUG and os.environ.get("WERKZEUG_RUN_MAIN") != "true":
+        return
+
+    from apscheduler.schedulers.background import BackgroundScheduler
+
+    import odds
+
+    scheduler = BackgroundScheduler(daemon=True)
+    scheduler.add_job(
+        lambda: odds.sync_all(app),
+        "interval",
+        minutes=app.config["ODDS_SYNC_MINUTES"],
+        next_run_time=datetime.now(),
+    )
+    scheduler.start()
 
 
 if __name__ == "__main__":
     app = create_app()
-    app.run(debug=os.environ.get("FLASK_ENV") != "production")
+    app.run(debug=IS_DEBUG)
