@@ -1,5 +1,4 @@
 import os
-from datetime import datetime
 
 from flask import Flask
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -55,14 +54,8 @@ def _start_odds_scheduler(app):
 
     import odds
 
-    scheduler = BackgroundScheduler(daemon=True)
-    scheduler.add_job(
-        lambda: odds.sync_all(app),
-        "interval",
-        minutes=app.config["ODDS_SYNC_MINUTES"],
-        next_run_time=datetime.now(),
-    )
-    scheduler.start()
+    scheduler = BackgroundScheduler(daemon=True, timezone=odds.EASTERN)
+    odds.start_scheduler(app, scheduler)
 
 
 if __name__ == "__main__":

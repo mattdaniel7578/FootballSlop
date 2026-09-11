@@ -1,20 +1,33 @@
 """
 Automatic DraftKings spread + result sync via https://the-odds-api.com/
-(free tier available). Runs on a schedule from app.py — see
-_start_odds_scheduler() — so games and results need no manual entry.
+(free tier available). Scheduled from app.py — see start_scheduler() — so
+games and results need no manual entry.
 
-Requires ODDS_API_KEY in the environment; sync_all() is a no-op (logged)
-when it's unset, so the app still runs without it, just with no games.
+Requires ODDS_API_KEY in the environment; sync_spreads()/sync_results() are
+a no-op (logged) when it's unset, so the app still runs without it, just
+with no games.
+
+Rather than polling on a blanket interval, jobs are timed to when the data
+actually changes, to stay well within the free tier's request quota:
+  - Tuesdays at 8am ET: pull the coming week's lines (+ venues).
+  - At each game's own snap deadline (see compute_snap_at): one spread sync
+    to capture the frozen line.
+  - From 2h to 5h after each kickoff, every 15 minutes: poll for a final
+    score, stopping as soon as every game from that kickoff has one.
+See start_scheduler() for how these are wired up with APScheduler.
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import requests
+from apscheduler.triggers.cron import CronTrigger
+from apscheduler.triggers.date import DateTrigger
+from apscheduler.triggers.interval import IntervalTrigger
 
 from extensions import db
-from models import Game, classify_slate, compute_snap_at, now_eastern
+from models import ApiUsage, Game, classify_slate, compute_snap_at, now_eastern
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +35,11 @@ EASTERN = ZoneInfo("America/New_York")
 
 ODDS_URL = "https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds"
 SCORES_URL = "https://api.the-odds-api.com/v4/sports/americanfootball_nfl/scores"
+
+# How long after kickoff to start, and stop, polling for a final score.
+RESULTS_POLL_START = timedelta(hours=2)
+RESULTS_POLL_END = timedelta(hours=5)
+RESULTS_POLL_MINUTES = 15
 
 # Public, no-key-required — the-odds-api doesn't include venue data, but
 # this does, including neutral-site/international games (e.g. London,
@@ -43,6 +61,25 @@ def _season_and_week(kickoff_et, season_start_date):
     return season, 1
 
 
+def _record_api_usage(resp):
+    """the-odds-api reports remaining free-tier quota on every response via
+    these headers — save the latest reading so the admin page can show it,
+    rather than calling a separate (quota-consuming) endpoint for it."""
+    used = resp.headers.get("x-requests-used")
+    remaining = resp.headers.get("x-requests-remaining")
+    if used is None or remaining is None:
+        return
+
+    usage = ApiUsage.query.get(1)
+    if usage is None:
+        usage = ApiUsage(id=1)
+        db.session.add(usage)
+    usage.requests_used = int(used)
+    usage.requests_remaining = int(remaining)
+    usage.updated_at = now_eastern()
+    db.session.commit()
+
+
 def sync_spreads(app):
     api_key = app.config["ODDS_API_KEY"]
     if not api_key:
@@ -61,6 +98,7 @@ def sync_spreads(app):
         timeout=15,
     )
     resp.raise_for_status()
+    _record_api_usage(resp)
 
     season_start_date = app.config["SEASON_START_DATE"]
     now = now_eastern()
@@ -124,6 +162,7 @@ def sync_results(app):
         timeout=15,
     )
     resp.raise_for_status()
+    _record_api_usage(resp)
 
     for event in resp.json():
         if not event.get("completed") or not event.get("scores"):
@@ -197,20 +236,96 @@ def sync_venues(app):
     db.session.commit()
 
 
-def sync_all(app):
-    """Entry point for the scheduled job in app.py."""
+def start_scheduler(app, scheduler):
+    """Entry point called once from app.py. Schedules the weekly pull, then
+    lets it (and every subsequent pull) fan out into the per-game snap and
+    results jobs — see the module docstring for the schedule."""
+    scheduler.add_job(
+        lambda: _weekly_pull(app, scheduler),
+        CronTrigger(day_of_week="tue", hour=8, minute=0, timezone=EASTERN),
+        id="weekly-pull",
+        # Also run once immediately, so a fresh deploy (or a restart mid-
+        # week, e.g. Render redeploying) doesn't sit with no data/jobs
+        # until the next Tuesday.
+        next_run_time=datetime.now(EASTERN),
+    )
+    scheduler.start()
+
+
+def _weekly_pull(app, scheduler):
     with app.app_context():
         try:
             sync_spreads(app)
         except Exception:
             logger.exception("DraftKings spread sync failed")
-
-        try:
-            sync_results(app)
-        except Exception:
-            logger.exception("DraftKings results sync failed")
-
         try:
             sync_venues(app)
         except Exception:
             logger.exception("ESPN venue sync failed")
+    _schedule_game_jobs(app, scheduler)
+
+
+def _snap_job(app, scheduler):
+    with app.app_context():
+        try:
+            sync_spreads(app)
+        except Exception:
+            logger.exception("DraftKings spread sync failed")
+    _schedule_game_jobs(app, scheduler)
+
+
+def _results_job(app, scheduler, job_id, kickoff_at):
+    with app.app_context():
+        try:
+            sync_results(app)
+        except Exception:
+            logger.exception("DraftKings results sync failed")
+            return
+        remaining = Game.query.filter_by(kickoff_at=kickoff_at, winner=None).count()
+    if remaining == 0:
+        scheduler.remove_job(job_id)
+
+
+def _schedule_game_jobs(app, scheduler):
+    """(Re)schedule the final-line-snap and post-kickoff results-polling
+    jobs for whatever games currently need one. Called after every spread
+    sync, so newly-discovered games (and a scheduler restarted mid-week)
+    both end up with correct jobs — one per distinct snap/kickoff time
+    rather than per game, since games on the same slate share both."""
+    now = now_eastern()
+    with app.app_context():
+        active_games = Game.query.filter(Game.winner.is_(None)).all()
+        snap_times = {
+            compute_snap_at(game.kickoff_at)
+            for game in active_games
+            if game.line_snapshot_at is None
+        }
+        kickoff_times = {
+            game.kickoff_at
+            for game in active_games
+            if now < game.kickoff_at + RESULTS_POLL_END
+        }
+
+    for snap_at in snap_times:
+        if snap_at <= now:
+            continue
+        scheduler.add_job(
+            lambda: _snap_job(app, scheduler),
+            DateTrigger(run_date=snap_at, timezone=EASTERN),
+            id=f"snap-{snap_at.isoformat()}",
+            replace_existing=True,
+        )
+
+    for kickoff_at in kickoff_times:
+        job_id = f"results-{kickoff_at.isoformat()}"
+        scheduler.add_job(
+            lambda job_id=job_id, kickoff_at=kickoff_at: _results_job(app, scheduler, job_id, kickoff_at),
+            IntervalTrigger(
+                minutes=RESULTS_POLL_MINUTES,
+                start_date=kickoff_at + RESULTS_POLL_START,
+                end_date=kickoff_at + RESULTS_POLL_END,
+                timezone=EASTERN,
+            ),
+            id=job_id,
+            replace_existing=True,
+        )

@@ -30,7 +30,6 @@ class Config:
     # From https://the-odds-api.com/ — used to pull DraftKings spreads and
     # final scores automatically instead of manual entry (see odds.py).
     ODDS_API_KEY = os.environ.get("ODDS_API_KEY", "")
-    ODDS_SYNC_MINUTES = int(os.environ.get("ODDS_SYNC_MINUTES", "60"))
     SEASON_START_DATE = SEASON_START_DATE
 
     # Gates the /admin/participation tab only — comma-separated emails.

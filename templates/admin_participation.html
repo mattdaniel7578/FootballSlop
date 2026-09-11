@@ -4,6 +4,22 @@
 {% block content %}
   <h1>Pick Participation</h1>
 
+  {% if api_usage and api_usage.requests_used is not none %}
+    {% set total = api_usage.requests_used + api_usage.requests_remaining %}
+    {% set pct = (api_usage.requests_used / total * 100) if total else 0 %}
+    <section class="api-usage">
+      <h2>Odds API credits</h2>
+      <div class="api-usage-bar">
+        <div class="api-usage-bar-fill" style="width: {{ pct }}%"></div>
+      </div>
+      <p class="api-usage-label">
+        {{ api_usage.requests_used }} / {{ total }} used this period —
+        {{ api_usage.requests_remaining }} remaining
+        <span class="pending">(as of {{ api_usage.updated_at | snap_eta }} ET)</span>
+      </p>
+    </section>
+  {% endif %}
+
   {% if weeks %}
     <form method="get" class="week-select">
       <select name="week" aria-label="Week" onchange="this.form.submit()">

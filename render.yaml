@@ -24,8 +24,6 @@ services:
         sync: false
       - key: SEASON_START_DATE
         sync: false
-      - key: ODDS_SYNC_MINUTES
-        value: 60
       - key: ADMIN_EMAILS
         value: mattdaniel7578@gmail.com
 

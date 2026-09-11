@@ -1,11 +1,11 @@
 from collections import defaultdict
 from itertools import groupby
 
-from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, url_for
+from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from extensions import db
-from models import SLATE_LABELS, Game, Pick, User, now_eastern, short_team_name
+from models import SLATE_LABELS, ApiUsage, Game, Pick, User, now_eastern, short_team_name
 
 bp = Blueprint("main", __name__)
 
@@ -245,6 +245,8 @@ def lines():
 def admin_participation():
     admin_required()
 
+    api_usage = ApiUsage.query.get(1)
+
     season = current_season()
     weeks = []
     week = None
@@ -305,11 +307,16 @@ def admin_participation():
             groups.append({"label": SLATE_LABELS[slate], "picked": picked, "not_picked": not_picked})
 
     return render_template(
-        "admin_participation.html", groups=groups, season=season, week=week, weeks=weeks
+        "admin_participation.html",
+        groups=groups,
+        season=season,
+        week=week,
+        weeks=weeks,
+        api_usage=api_usage,
     )
 
 
 @bp.route("/rules")
 @login_required
 def rules():
-    return render_template("rules.html", odds_sync_minutes=current_app.config["ODDS_SYNC_MINUTES"])
+    return render_template("rules.html")

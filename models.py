@@ -142,6 +142,17 @@ class Game(db.Model):
         return f"+{self.spread_points:g}"
 
 
+class ApiUsage(db.Model):
+    """Single-row table tracking the-odds-api's free-tier quota, read off
+    the x-requests-used/x-requests-remaining response headers (see
+    odds._record_api_usage) so the admin page can show how much is left."""
+
+    id = db.Column(db.Integer, primary_key=True)
+    requests_used = db.Column(db.Integer)
+    requests_remaining = db.Column(db.Integer)
+    updated_at = db.Column(db.DateTime)
+
+
 class Pick(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
