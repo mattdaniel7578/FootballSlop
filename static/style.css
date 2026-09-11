@@ -354,7 +354,7 @@ nav a.active {
 
 .position-col {
   text-align: center;
-  width: 9%;
+  width: 10%;
 }
 
 .record-col {
@@ -363,7 +363,7 @@ nav a.active {
 }
 
 .player-col {
-  width: 29%;
+  width: 28%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -534,7 +534,7 @@ nav a.active {
   }
 
   .position-col {
-    width: 9%;
+    width: 10%;
   }
 
   .leaderboard-table td, .leaderboard-table th {
@@ -549,7 +549,7 @@ nav a.active {
   }
 
   .player-col {
-    width: 37%;
+    width: 36%;
     font-size: 0.78em;
   }
 
