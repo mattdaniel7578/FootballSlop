@@ -145,12 +145,15 @@ class Game(db.Model):
 class ApiUsage(db.Model):
     """Single-row table tracking the-odds-api's free-tier quota, read off
     the x-requests-used/x-requests-remaining response headers (see
-    odds._record_api_usage) so the admin page can show how much is left."""
+    odds._record_api_usage), plus when each kind of pull last completed —
+    so the admin page can show usage and freshness at a glance."""
 
     id = db.Column(db.Integer, primary_key=True)
     requests_used = db.Column(db.Integer)
     requests_remaining = db.Column(db.Integer)
     updated_at = db.Column(db.DateTime)
+    odds_synced_at = db.Column(db.DateTime)
+    results_synced_at = db.Column(db.DateTime)
 
 
 class Pick(db.Model):

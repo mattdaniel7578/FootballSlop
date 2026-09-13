@@ -459,6 +459,18 @@ nav a.active {
   font-size: 0.85rem;
 }
 
+.api-usage-sync-times {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.api-usage-sync-times li + li {
+  margin-top: 0.2rem;
+}
+
 .participation-group {
   margin-bottom: 1.5rem;
 }

@@ -56,6 +56,7 @@ def _start_odds_scheduler(app):
 
     scheduler = BackgroundScheduler(daemon=True, timezone=odds.EASTERN)
     odds.start_scheduler(app, scheduler)
+    app.extensions["odds_scheduler"] = scheduler
 
 
 if __name__ == "__main__":

@@ -1,9 +1,10 @@
 from collections import defaultdict
 from itertools import groupby
 
-from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
+from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
+import odds
 from extensions import db
 from models import SLATE_LABELS, ApiUsage, Game, Pick, User, now_eastern, short_team_name
 
@@ -246,6 +247,7 @@ def admin_participation():
     admin_required()
 
     api_usage = ApiUsage.query.get(1)
+    next_odds_sync, next_results_sync = odds.next_sync_times(current_app.extensions.get("odds_scheduler"))
 
     season = current_season()
     weeks = []
@@ -313,6 +315,8 @@ def admin_participation():
         week=week,
         weeks=weeks,
         api_usage=api_usage,
+        next_odds_sync=next_odds_sync,
+        next_results_sync=next_results_sync,
     )
 
 

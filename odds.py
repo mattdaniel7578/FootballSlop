@@ -18,7 +18,7 @@ See start_scheduler() for how these are wired up with APScheduler.
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
 import requests
@@ -61,10 +61,11 @@ def _season_and_week(kickoff_et, season_start_date):
     return season, 1
 
 
-def _record_api_usage(resp):
+def _record_api_usage(resp, kind):
     """the-odds-api reports remaining free-tier quota on every response via
-    these headers — save the latest reading so the admin page can show it,
-    rather than calling a separate (quota-consuming) endpoint for it."""
+    these headers — save the latest reading, plus when this kind of pull
+    ("odds" or "results") last completed, so the admin page can show both
+    usage and freshness without a separate (quota-consuming) call."""
     used = resp.headers.get("x-requests-used")
     remaining = resp.headers.get("x-requests-remaining")
     if used is None or remaining is None:
@@ -76,7 +77,12 @@ def _record_api_usage(resp):
         db.session.add(usage)
     usage.requests_used = int(used)
     usage.requests_remaining = int(remaining)
-    usage.updated_at = now_eastern()
+    now = now_eastern()
+    usage.updated_at = now
+    if kind == "odds":
+        usage.odds_synced_at = now
+    else:
+        usage.results_synced_at = now
     db.session.commit()
 
 
@@ -98,7 +104,7 @@ def sync_spreads(app):
         timeout=15,
     )
     resp.raise_for_status()
-    _record_api_usage(resp)
+    _record_api_usage(resp, "odds")
 
     season_start_date = app.config["SEASON_START_DATE"]
     now = now_eastern()
@@ -162,7 +168,7 @@ def sync_results(app):
         timeout=15,
     )
     resp.raise_for_status()
-    _record_api_usage(resp)
+    _record_api_usage(resp, "results")
 
     for event in resp.json():
         if not event.get("completed") or not event.get("scores"):
@@ -236,6 +242,20 @@ def sync_venues(app):
     db.session.commit()
 
 
+def _last_weekly_pull_due(now):
+    """The most recent Tuesday 8am ET at or before `now` — i.e. the last
+    time the weekly-pull job was supposed to fire. Used on startup to tell
+    a genuinely missed pull (deploy/restart happened after that time, with
+    nothing synced since) apart from an ordinary restart that just happens
+    to land before the next one, so a redeploy doesn't burn an API credit
+    re-pulling odds that are already current."""
+    days_since_tuesday = (now.weekday() - 1) % 7  # Mon=0 ... Tuesday=1
+    due = datetime.combine(now.date() - timedelta(days=days_since_tuesday), time(8, 0))
+    if due > now:
+        due -= timedelta(days=7)
+    return due
+
+
 def start_scheduler(app, scheduler):
     """Entry point called once from app.py. Schedules the weekly pull, then
     lets it (and every subsequent pull) fan out into the per-game snap and
@@ -244,11 +264,24 @@ def start_scheduler(app, scheduler):
         lambda: _weekly_pull(app, scheduler),
         CronTrigger(day_of_week="tue", hour=8, minute=0, timezone=EASTERN),
         id="weekly-pull",
-        # Also run once immediately, so a fresh deploy (or a restart mid-
-        # week, e.g. Render redeploying) doesn't sit with no data/jobs
-        # until the next Tuesday.
-        next_run_time=datetime.now(EASTERN),
     )
+
+    now = now_eastern()
+    with app.app_context():
+        usage = ApiUsage.query.get(1)
+    last_pull = usage.odds_synced_at if usage else None
+
+    if last_pull is None or last_pull < _last_weekly_pull_due(now):
+        # The last scheduled pull was genuinely missed (a fresh deploy with
+        # no data yet, or downtime spanning it) — catch up now instead of
+        # sitting with no data/jobs until the next Tuesday.
+        scheduler.modify_job("weekly-pull", next_run_time=datetime.now(EASTERN))
+    else:
+        # Already up to date — just re-arm the snap/results jobs for
+        # existing games from the DB (lost on every restart, since the job
+        # store is in-memory) without spending a fresh API call.
+        _schedule_game_jobs(app, scheduler)
+
     scheduler.start()
 
 
@@ -329,3 +362,27 @@ def _schedule_game_jobs(app, scheduler):
             id=job_id,
             replace_existing=True,
         )
+
+
+def next_sync_times(scheduler):
+    """(next planned odds pull, next planned results pull) read straight off
+    the live scheduler's queued jobs, for the admin page — None for either
+    if nothing of that kind is currently scheduled (e.g. no game is within
+    its results-polling window right now)."""
+    if scheduler is None:
+        return None, None
+
+    odds_times = []
+    results_times = []
+    for job in scheduler.get_jobs():
+        if job.next_run_time is None:
+            continue
+        if job.id == "weekly-pull" or job.id.startswith("snap-"):
+            odds_times.append(job.next_run_time)
+        elif job.id.startswith("results-"):
+            results_times.append(job.next_run_time)
+
+    return (
+        min(odds_times) if odds_times else None,
+        min(results_times) if results_times else None,
+    )

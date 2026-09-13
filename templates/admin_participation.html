@@ -17,6 +17,20 @@
         {{ api_usage.requests_remaining }} remaining
         <span class="pending">(as of {{ api_usage.updated_at | snap_eta }} ET)</span>
       </p>
+      <ul class="api-usage-sync-times">
+        <li>
+          Odds last pulled:
+          {% if api_usage.odds_synced_at %}{{ api_usage.odds_synced_at | snap_eta }} ET{% else %}<span class="pending">never</span>{% endif %}
+          — next planned
+          {% if next_odds_sync %}{{ next_odds_sync | snap_eta }} ET{% else %}<span class="pending">not currently scheduled</span>{% endif %}
+        </li>
+        <li>
+          Scores last pulled:
+          {% if api_usage.results_synced_at %}{{ api_usage.results_synced_at | snap_eta }} ET{% else %}<span class="pending">never</span>{% endif %}
+          — next planned
+          {% if next_results_sync %}{{ next_results_sync | snap_eta }} ET{% else %}<span class="pending">not currently scheduled</span>{% endif %}
+        </li>
+      </ul>
     </section>
   {% endif %}
 
