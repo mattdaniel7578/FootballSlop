@@ -12,7 +12,7 @@ actually changes, to stay well within the free tier's request quota:
   - Tuesdays at 8am ET: pull the coming week's lines (+ venues).
   - At each game's own snap deadline (see compute_snap_at): one spread sync
     to capture the frozen line.
-  - From 2h to 5h after each kickoff, every 15 minutes: poll for a final
+  - From 3h to 5h after each kickoff, every 15 minutes: poll for a final
     score, stopping as soon as every game from that kickoff has one.
 See start_scheduler() for how these are wired up with APScheduler.
 """
@@ -37,7 +37,7 @@ ODDS_URL = "https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds"
 SCORES_URL = "https://api.the-odds-api.com/v4/sports/americanfootball_nfl/scores"
 
 # How long after kickoff to start, and stop, polling for a final score.
-RESULTS_POLL_START = timedelta(hours=2)
+RESULTS_POLL_START = timedelta(hours=3)
 RESULTS_POLL_END = timedelta(hours=5)
 RESULTS_POLL_MINUTES = 15
 
