@@ -21,23 +21,31 @@ def current_season():
 
 
 def current_week(season):
-    """The soonest week that isn't fully finished yet, or the last week if
-    the whole season's games have already kicked off."""
-    weeks = (
-        db.session.query(Game.week, db.func.max(Game.kickoff_at))
-        .filter_by(season=season)
-        .group_by(Game.week)
-        .order_by(Game.week)
-        .all()
-    )
+    """The calendar week that should be showing right now, using the same
+    Tue-Mon windows odds._season_and_week() uses to assign Game.week —
+    capped to whatever week's games actually exist yet.
+
+    This deliberately ignores whether a later week's games are already in
+    the DB: DraftKings lines for next week can land (via any spread sync,
+    not just the Tuesday pull) as soon as they're posted, which is often
+    before that week "starts" — e.g. Sunday night, while this week's Monday
+    game is still being played. Without this, the default page would jump
+    to next week the moment this week's last kickoff passes, even though
+    it's not yet that week's Tuesday.
+    """
+    weeks = [
+        w
+        for (w,) in db.session.query(Game.week).filter_by(season=season).distinct().order_by(Game.week).all()
+    ]
     if not weeks:
         return 1
 
-    now = now_eastern()
-    for week, last_kickoff in weeks:
-        if last_kickoff >= now:
-            return week
-    return weeks[-1][0]
+    season_start_date = current_app.config["SEASON_START_DATE"]
+    if season_start_date is None:
+        return weeks[-1]
+
+    calendar_week = max(1, (now_eastern().date() - season_start_date).days // 7 + 1)
+    return min(calendar_week, weeks[-1])
 
 
 @bp.route("/")
@@ -138,6 +146,10 @@ def make_pick(game_id):
 
     if game.is_locked():
         flash("Picks are locked for this game — kickoff has passed.", "error")
+        return redirect(url_for("main.index", week=game.week))
+
+    if game.line_snapshot_at is None:
+        flash("Picks aren't open for this game yet — its line hasn't snapped.", "error")
         return redirect(url_for("main.index", week=game.week))
 
     picked_team = request.form.get("picked_team")

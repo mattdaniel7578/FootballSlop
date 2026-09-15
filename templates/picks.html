@@ -79,7 +79,7 @@
                   <span class="row-indicator"></span>
                 </div>
               </details>
-            {% else %}
+            {% elif game.line_snapshot_at %}
               <form method="post" action="{{ url_for('main.make_pick', game_id=game.id) }}" class="pick-row">
                 <span class="row-indicator" aria-hidden="true"></span>
                 <div class="team-col">
@@ -100,6 +100,21 @@
 
                 <span class="row-indicator"></span>
               </form>
+            {% else %}
+              <div class="pick-row">
+                <span class="row-indicator" aria-hidden="true"></span>
+                <div class="team-col">
+                  <span class="team-box">{{ game.away_team|short_team }} {{ game.spread_display(game.away_team) }}</span>
+                </div>
+
+                <span class="at-sep">@</span>
+
+                <div class="team-col">
+                  <span class="team-box">{{ game.home_team|short_team }} {{ game.spread_display(game.home_team) }}</span>
+                </div>
+
+                <span class="row-indicator"></span>
+              </div>
             {% endif %}
           </div>
         {% endfor %}
