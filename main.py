@@ -329,6 +329,7 @@ def admin_participation():
         api_usage=api_usage,
         next_odds_sync=next_odds_sync,
         next_results_sync=next_results_sync,
+        server_now=now_eastern(),
     )
 
 

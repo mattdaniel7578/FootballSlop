@@ -4,6 +4,8 @@
 {% block content %}
   <h1>Pick Participation</h1>
 
+  <p class="pending">Server time: {{ server_now.strftime('%a %m/%d %I:%M:%S %p') }} ET</p>
+
   {% if api_usage and api_usage.requests_used is not none %}
     {% set total = api_usage.requests_used + api_usage.requests_remaining %}
     {% set pct = (api_usage.requests_used / total * 100) if total else 0 %}
