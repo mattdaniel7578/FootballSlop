@@ -340,11 +340,14 @@ def _schedule_game_jobs(app, scheduler):
         }
 
     for snap_at in snap_times:
-        if snap_at <= now:
-            continue
+        # A snap missed entirely (deadline passed while the process was
+        # down, or its in-memory job was lost on a restart) needs to run
+        # right away instead of being silently dropped forever — same
+        # catch-up idea as the weekly-pull check in start_scheduler().
+        run_date = snap_at if snap_at > now else now
         scheduler.add_job(
             lambda: _snap_job(app, scheduler),
-            DateTrigger(run_date=snap_at, timezone=EASTERN),
+            DateTrigger(run_date=run_date, timezone=EASTERN),
             id=f"snap-{snap_at.isoformat()}",
             replace_existing=True,
         )
