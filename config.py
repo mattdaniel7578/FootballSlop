@@ -6,10 +6,16 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Render (and Heroku-style hosts) inject Postgres URLs as "postgres://", but
-# SQLAlchemy's modern driver requires "postgresql://".
+# SQLAlchemy's modern driver requires "postgresql://". Pin the driver to
+# psycopg2 (the one actually installed, see requirements.txt) explicitly —
+# newer SQLAlchemy releases have changed which driver a bare "postgresql://"
+# resolves to by default, which otherwise breaks the app the moment a
+# fresh build picks up a newer unpinned SQLAlchemy.
 _database_url = os.environ.get("DATABASE_URL", "sqlite:///pool.db")
 if _database_url.startswith("postgres://"):
-    _database_url = _database_url.replace("postgres://", "postgresql://", 1)
+    _database_url = _database_url.replace("postgres://", "postgresql+psycopg2://", 1)
+elif _database_url.startswith("postgresql://"):
+    _database_url = _database_url.replace("postgresql://", "postgresql+psycopg2://", 1)
 
 IS_PRODUCTION = os.environ.get("FLASK_ENV") == "production"
 
