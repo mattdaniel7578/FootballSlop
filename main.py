@@ -184,10 +184,38 @@ def make_pick(game_id):
     return redirect(url_for("main.index", week=game.week))
 
 
+def _week_pick_slots(games):
+    """The independent units a pick was required for within one week: each
+    primetime game on its own, and the early/late slates each as a single
+    unit, since only one pick is allowed across a whole early/late slate
+    (see make_pick)."""
+    slots = []
+    for game in games:
+        if game.slate == "primetime":
+            slots.append({
+                "games": [game],
+                "label": f"{short_team_name(game.away_team)} @ {short_team_name(game.home_team)}",
+            })
+    for slate in ("early", "late"):
+        slate_games = [g for g in games if g.slate == slate]
+        if slate_games:
+            slots.append({"games": slate_games, "label": SLATE_LABELS[slate]})
+    return slots
+
+
 @bp.route("/leaderboard")
 @login_required
 def leaderboard():
-    users = User.query.order_by(User.name).all()
+    # Hidden from the leaderboard only — not deleted, so this doesn't touch
+    # their account or any picks already recorded for them.
+    users = (
+        User.query.filter(User.email != "tracearbuckle@gmail.com").order_by(User.name).all()
+    )
+
+    games_by_week = defaultdict(list)
+    for g in Game.query.order_by(Game.kickoff_at).all():
+        games_by_week[(g.season, g.week)].append(g)
+    slots_by_week = {key: _week_pick_slots(gs) for key, gs in games_by_week.items()}
 
     records = []
     for user in users:
@@ -202,13 +230,54 @@ def leaderboard():
             # only what the main Picks page would already show you.
             picks = [p for p in picks if p.game.is_locked()]
 
+        picked_game_ids = {p.game_id for p in picks}
+
+        entries = []
+        for p in picks:
+            game = p.game
+            if game.winner is None:
+                status = "pending"
+            elif game.winner == "PUSH":
+                status = "push"
+            elif p.picked_team == game.winner:
+                status = "win"
+            else:
+                status = "loss"
+            entries.append({
+                "season": game.season,
+                "week": game.week,
+                "kickoff_at": game.kickoff_at,
+                "label": f"{short_team_name(p.picked_team)} ({game.spread_display(p.picked_team)})",
+                "status": status,
+            })
+
+        # A slot counts as missed once every game in it has locked — i.e.
+        # there's no way left to pick it — and the user has no pick in it.
+        # Missed slots count as losses, same as picking wrong.
+        missed = 0
+        for (season, week), slots in slots_by_week.items():
+            for slot in slots:
+                if not all(g.is_locked() for g in slot["games"]):
+                    continue
+                if picked_game_ids.isdisjoint(g.id for g in slot["games"]):
+                    missed += 1
+                    entries.append({
+                        "season": season,
+                        "week": week,
+                        "kickoff_at": min(g.kickoff_at for g in slot["games"]),
+                        "label": slot["label"],
+                        "status": "missed",
+                    })
+
+        entries.sort(key=lambda e: (-e["season"], -e["week"], e["kickoff_at"]))
+
         decided_picks = [p for p in picks if p.game.winner is not None]
         ties = sum(1 for p in decided_picks if p.game.winner == "PUSH")
         wins = sum(1 for p in decided_picks if p.game.winner != "PUSH" and p.picked_team == p.game.winner)
-        losses = len(decided_picks) - wins - ties
+        losses = len(decided_picks) - wins - ties + missed
         pct = round(wins / (wins + losses) * 100) if (wins + losses) else None
         records.append({
-            "user": user, "wins": wins, "losses": losses, "ties": ties, "pct": pct, "picks": picks,
+            "user": user, "wins": wins, "losses": losses, "ties": ties, "pct": pct, "entries": entries,
         })
 
     records.sort(key=lambda r: (-r["wins"], r["losses"], r["user"].name.lower()))

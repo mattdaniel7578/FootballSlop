@@ -25,7 +25,7 @@
             <td class="record-col">{{ r.wins }}-{{ r.losses }}-{{ r.ties }}</td>
             <td class="position-col">{{ "%d%%" | format(r.pct) if r.pct is not none else "—" }}</td>
             <td>
-              {% if r.picks %}
+              {% if r.entries %}
                 <details class="picks-toggle">
                   <summary>View picks</summary>
                 </details>
@@ -34,19 +34,21 @@
               {% endif %}
             </td>
           </tr>
-          {% if r.picks %}
+          {% if r.entries %}
             <tr class="lb-detail-row">
               <td colspan="5">
                 <div class="picks-subgrid">
-                  {% for pick in r.picks %}
+                  {% for entry in r.entries %}
                     <div class="pick-chip">
-                      Week {{ pick.game.week }}: {{ pick.picked_team|short_team }} ({{ pick.game.spread_display(pick.picked_team) }})
-                      {% if pick.game.winner is none %}
+                      Week {{ entry.week }}: {{ entry.label }}
+                      {% if entry.status == "pending" %}
                         <span class="pending">Pending</span>
-                      {% elif pick.game.winner == "PUSH" %}
+                      {% elif entry.status == "push" %}
                         <span class="pending">Push</span>
-                      {% elif pick.picked_team == pick.game.winner %}
+                      {% elif entry.status == "win" %}
                         <span class="win">Win</span>
+                      {% elif entry.status == "missed" %}
+                        <span class="loss">Missed</span>
                       {% else %}
                         <span class="loss">Loss</span>
                       {% endif %}
