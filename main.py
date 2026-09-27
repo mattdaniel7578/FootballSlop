@@ -159,18 +159,28 @@ def make_pick(game_id):
 
     if game.slate in ("early", "late"):
         # Only one pick is allowed per early/late slate — picking a
-        # different game in the same slate replaces the earlier one.
-        slate_game_ids = [
-            g.id
-            for g in Game.query.filter_by(
-                season=game.season, week=game.week, slate=game.slate
-            ).with_entities(Game.id)
-            if g.id != game.id
-        ]
-        if slate_game_ids:
-            Pick.query.filter(
-                Pick.user_id == current_user.id, Pick.game_id.in_(slate_game_ids)
-            ).delete(synchronize_session=False)
+        # different game in the same slate replaces the earlier one, unless
+        # the existing pick's game has already kicked off.
+        existing_slate_pick = (
+            Pick.query.join(Game, Pick.game_id == Game.id)
+            .filter(
+                Pick.user_id == current_user.id,
+                Game.season == game.season,
+                Game.week == game.week,
+                Game.slate == game.slate,
+                Game.id != game.id,
+            )
+            .first()
+        )
+        if existing_slate_pick and existing_slate_pick.game.is_locked():
+            flash(
+                "Can't switch picks in this slate — your other pick has already kicked off.",
+                "error",
+            )
+            return redirect(url_for("main.index", week=game.week))
+
+        if existing_slate_pick:
+            db.session.delete(existing_slate_pick)
 
     pick = Pick.query.filter_by(user_id=current_user.id, game_id=game.id).first()
     if pick is None:
